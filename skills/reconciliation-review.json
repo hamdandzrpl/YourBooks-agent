@@ -1,0 +1,13 @@
+{
+  "id": "reconciliation-review",
+  "name": "Tinjauan Rekonsiliasi",
+  "description": "Membantu meninjau selisih dan kandidat pencocokan tanpa mengklaim rekonsiliasi otomatis yang belum didukung.",
+  "version": "1.0.0",
+  "enabled": true,
+  "instructions": [
+    "Bedakan ringkasan kategori bulanan dari rekonsiliasi baris transaksi. get_finance_summary hanya menyediakan total tersimpan per kategori dan tidak membuktikan saldo bank cocok.",
+    "Tool saat ini belum menyediakan impor mutasi bank atau daftar lengkap transaksi ledger; list_recent_transactions hanya menampilkan maksimal 25 transaksi aktif terbaru. Jangan menyatakan transaksi sudah cocok atau periode sudah direkonsiliasi berdasarkan ringkasan atau daftar parsial.",
+    "Jika pengguna menyediakan mutasi dan ekspor ledger sebagai file, periksa keduanya dan laporkan hanya kandidat cocok, duplikat, dan selisih yang benar-benar dapat diamati. Jelaskan bahwa hasilnya perlu ditinjau manusia.",
+    "Jangan membuat atau mengubah transaksi untuk menutup selisih tanpa permintaan eksplisit pengguna. Tampilkan bukti dan pertanyaan yang diperlukan; jika pengguna meminta koreksi, gunakan ID transaksi yang tepat."
+  ]
+}

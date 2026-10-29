@@ -1,0 +1,3362 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f1f3f2">
+  <meta name="description" content="Panel operasional WhatsApp Finance Agent">
+  <title>Panel Agent</title>
+  <style>
+    /* ==========================================================================
+       Design tokens
+       Satu keluarga netral (cool gray ber-tint hijau), satu aksen hijau gelap.
+       Tidak ada font/gambar eksternal: panel tetap utuh saat deploy offline.
+       ========================================================================== */
+    :root {
+      color-scheme: light;
+
+      --font-sans: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-display: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+      --ink: #14201b;
+      --ink-2: #3b4a43;
+      --muted: #616f68;
+      --faint: #8a958f;
+
+      --bg: #f1f3f2;
+      --surface: #ffffff;
+      --surface-2: #f7f9f8;
+      --surface-3: #eef2f0;
+
+      --line: #e3e9e5;
+      --line-2: #d4ddd8;
+      --line-3: #b9c6be;
+
+      --accent: #2f6a52;
+      --accent-strong: #245440;
+      --accent-ink: #1b4332;
+      --accent-soft: #e9f1ed;
+      --accent-line: #c3dccd;
+
+      --danger: #9a4437;
+      --danger-soft: #fbefed;
+      --danger-line: #ecd0ca;
+
+      --warn: #87611f;
+      --warn-soft: #f9f2e1;
+      --warn-line: #e7d4ad;
+
+      --rail: #131c18;
+      --rail-2: #1a2520;
+      --rail-ink: #e9efec;
+      --rail-muted: #8fa198;
+      --rail-line: #29352f;
+
+      --r-xs: 4px;
+      --r-sm: 6px;
+      --r-md: 9px;
+      --r-lg: 12px;
+      --r-xl: 16px;
+      --r-pill: 999px;
+
+      --sh-1: 0 1px 2px rgba(16, 32, 26, .05);
+      --sh-2: 0 1px 2px rgba(16, 32, 26, .04), 0 12px 28px -18px rgba(16, 32, 26, .28);
+      --sh-pop: 0 36px 72px -36px rgba(9, 20, 15, .38);
+
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --t: 170ms var(--ease);
+
+      font-family: var(--font-sans);
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    h1, h2, h3, p, dl, dd { margin: 0; }
+    body {
+      min-width: 320px;
+      min-height: 100dvh;
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+    }
+    button, input, select, textarea { color: inherit; font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .sidebar button:focus-visible, .login-aside a:focus-visible { outline-color: #7fb69a; }
+    [hidden] { display: none !important; }
+    ::selection { background: #cfe3d8; color: var(--accent-ink); }
+    ::placeholder { color: var(--faint); opacity: 1; }
+    * { scrollbar-width: thin; scrollbar-color: var(--line-3) transparent; }
+
+    /* Ikon: satu sistem, stroke 1.6, ukuran mengikuti font-size induk. */
+    .icon {
+      width: 1em;
+      height: 1em;
+      flex: none;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ==========================================================================
+       Login
+       ========================================================================== */
+    .login-screen {
+      display: grid;
+      min-height: 100dvh;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      background: var(--bg);
+    }
+    .login-aside {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 36px;
+      overflow: hidden;
+      padding: 40px 44px;
+      background: var(--rail);
+      color: var(--rail-ink);
+    }
+    .login-aside::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background-image:
+        linear-gradient(var(--rail-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--rail-line) 1px, transparent 1px);
+      background-size: 44px 44px;
+      opacity: .55;
+      -webkit-mask-image: radial-gradient(125% 95% at 10% 0%, #000 22%, transparent 78%);
+      mask-image: radial-gradient(125% 95% at 10% 0%, #000 22%, transparent 78%);
+      pointer-events: none;
+    }
+    .login-aside-brand { display: flex; align-items: center; gap: 11px; }
+    .login-aside .brand-mark { background: #dfeae3; color: var(--accent-ink); box-shadow: none; }
+    .login-aside .brand-name { color: #f2f7f4; }
+    .login-aside .brand-caption { color: var(--rail-muted); }
+    .login-aside-body { display: grid; gap: 11px; max-width: 34ch; }
+    .login-aside-kicker {
+      color: var(--rail-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .login-aside-title {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 2.1vw, 30px);
+      font-weight: 600;
+      letter-spacing: -.03em;
+      line-height: 1.2;
+    }
+    .login-aside-list { display: grid; gap: 7px; margin: 3px 0 0; padding: 0; list-style: none; }
+    .login-aside-list li { position: relative; padding-left: 18px; color: #b7c8bf; font-size: 12px; line-height: 1.5; }
+    .login-aside-list li::before {
+      position: absolute;
+      top: .62em;
+      left: 0;
+      width: 8px;
+      height: 1px;
+      background: #5d8f77;
+      content: "";
+    }
+    .login-aside-foot { color: var(--rail-muted); font-size: 10.5px; }
+    .login-links { display: flex; gap: 14px; justify-content: center; margin-top: 4px; }
+    .login-links a { color: var(--accent); font-size: 11.5px; text-decoration: none; border-bottom: 1px solid var(--accent-line); padding-bottom: 1px; }
+    .login-links a:hover { color: var(--accent-strong); }
+
+    .login-panel { place-self: center; width: min(372px, 100%); padding: 32px 8px; }
+    .login-panel .brand-lockup { display: none; }
+    @media (max-width: 900px) {
+      .login-panel .brand-lockup { display: flex; margin-bottom: 22px; }
+      .login-panel .brand-lockup + h1 { margin-top: 0; }
+    }
+    .login-panel h1 {
+      margin: 26px 0 7px;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 620;
+      letter-spacing: -.028em;
+      line-height: 1.15;
+    }
+    .login-copy { margin-bottom: 22px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+
+    .brand-lockup { display: flex; align-items: center; gap: 11px; }
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      flex: none;
+      place-items: center;
+      border-radius: var(--r-md);
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+    }
+    .brand-name { font-size: 13.5px; font-weight: 650; letter-spacing: -.012em; }
+    .brand-caption { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+    /* ==========================================================================
+       Form controls
+       ========================================================================== */
+    .field { display: grid; min-width: 0; gap: 6px; }
+    .field > label { color: var(--ink-2); font-size: 11.5px; font-weight: 600; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 11px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background-color: var(--surface);
+      color: var(--ink);
+      font-size: 12.5px;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+    .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--line-3); }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(47, 106, 82, .13);
+    }
+    .field textarea {
+      min-height: 96px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.6;
+    }
+    .field small { color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .field input[type="checkbox"] { width: 16px; min-height: 16px; accent-color: var(--accent); }
+    input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+
+    .primary-button {
+      display: inline-flex;
+      min-height: 38px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: 1px solid var(--accent);
+      border-radius: var(--r-sm);
+      background: var(--accent);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+      transition: background var(--t), border-color var(--t), transform 90ms var(--ease), box-shadow var(--t);
+    }
+    .primary-button:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+    .primary-button:active { transform: translateY(1px); box-shadow: none; }
+    .primary-button:disabled { opacity: .55; cursor: progress; transform: none; }
+    .login-panel .primary-button { width: 100%; min-height: 40px; margin-top: 16px; }
+
+    .plain-button {
+      display: inline-flex;
+      min-height: 34px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 12px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      color: var(--ink-2);
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: background var(--t), border-color var(--t), color var(--t), transform 90ms var(--ease);
+    }
+    .plain-button:hover { background: var(--surface-2); border-color: var(--line-3); color: var(--ink); }
+    .plain-button:active { transform: translateY(1px); }
+    .plain-button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .error-message { min-height: 18px; margin: 10px 0 0; color: var(--danger); font-size: 11.5px; line-height: 1.45; }
+    .helper-copy {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    /* Select: panah digambar sendiri agar tampilan sama di semua browser. */
+    .field select, .explorer-sort select, .toolbar select, select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%235c6b64' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+      background-size: 11px 11px;
+    }
+
+    /* ==========================================================================
+       App shell
+       ========================================================================== */
+    .app-shell { display: grid; min-height: 100dvh; grid-template-columns: 244px minmax(0, 1fr); }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      height: 100dvh;
+      flex-direction: column;
+      padding: 18px 12px 14px;
+      border-right: 1px solid var(--rail-line);
+      background: var(--rail);
+      color: var(--rail-ink);
+    }
+    .sidebar .brand-mark { background: #dfeae3; color: var(--accent-ink); box-shadow: none; }
+    .sidebar .brand-name { color: #f2f7f4; }
+    .sidebar .brand-caption { color: var(--rail-muted); }
+
+    .nav-group { display: grid; gap: 2px; margin-top: 26px; }
+    .nav-label {
+      margin: 0 10px 8px;
+      color: var(--rail-muted);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .nav-link {
+      position: relative;
+      display: flex;
+      width: 100%;
+      min-height: 36px;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: var(--r-sm);
+      background: transparent;
+      color: #cfdad4;
+      font-size: 12.5px;
+      text-align: left;
+      transition: background var(--t), color var(--t);
+    }
+    .nav-link:hover { background: rgba(255, 255, 255, .055); color: #fff; }
+    .nav-link[aria-current="page"] {
+      background: var(--rail-2);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px var(--rail-line);
+    }
+    .nav-link[aria-current="page"]::before {
+      position: absolute;
+      top: 50%;
+      left: -12px;
+      width: 2px;
+      height: 16px;
+      transform: translateY(-50%);
+      border-radius: 0 2px 2px 0;
+      background: #6fae8e;
+      content: "";
+    }
+    .nav-code { display: grid; width: 18px; flex: none; place-items: center; color: #8fa198; transition: color var(--t); }
+    .nav-code .icon { width: 15px; height: 15px; stroke-width: 1.7; }
+    .nav-link:hover .nav-code, .nav-link[aria-current="page"] .nav-code { color: #b9d6c6; }
+
+    .sidebar-bottom { display: grid; gap: 8px; margin-top: auto; padding: 12px 10px 2px; border-top: 1px solid var(--rail-line); }
+    .sidebar-owner {
+      overflow: hidden;
+      color: #d3ded8;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sidebar-version { color: var(--rail-muted); font-size: 10px; }
+
+    .main-column { min-width: 0; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      min-height: 60px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(247, 249, 248, .84);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+    }
+    .topbar-title { font-size: 13.5px; font-weight: 650; letter-spacing: -.012em; }
+    .topbar-subtitle { margin-top: 1px; color: var(--muted); font-size: 11px; }
+    .topbar-actions { display: flex; align-items: center; gap: 9px; }
+
+    .connection-chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      gap: 7px;
+      padding: 0 11px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-pill);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 550;
+      transition: background var(--t), border-color var(--t), color var(--t);
+    }
+    .connection-dot { position: relative; width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--warn); }
+    .connection-chip[data-state="connected"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
+    .connection-chip[data-state="connected"] .connection-dot { background: #2f8b5f; }
+    .connection-chip[data-state="connected"] .connection-dot::after {
+      position: absolute;
+      inset: -3px;
+      border: 1px solid #2f8b5f;
+      border-radius: 50%;
+      content: "";
+      animation: ring-pulse 2.6s var(--ease) infinite;
+    }
+    .connection-chip[data-state="disconnected"] { border-color: var(--danger-line); background: var(--danger-soft); color: var(--danger); }
+    .connection-chip[data-state="disconnected"] .connection-dot { background: var(--danger); }
+    @keyframes ring-pulse {
+      0% { opacity: .5; transform: scale(.65); }
+      70%, 100% { opacity: 0; transform: scale(1.55); }
+    }
+
+    .page-wrap { width: min(1360px, 100%); margin: 0 auto; padding: 26px 28px 56px; }
+    .page[hidden] { display: none; }
+    .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    .page-heading h1 {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 1.6vw, 25px);
+      font-weight: 620;
+      letter-spacing: -.028em;
+      line-height: 1.15;
+    }
+    .page-heading p { max-width: 64ch; margin-top: 6px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+    .heading-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .notice {
+      display: flex;
+      gap: 9px;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      border: 1px solid var(--warn-line);
+      border-left-width: 3px;
+      border-radius: var(--r-sm);
+      background: var(--warn-soft);
+      color: #6d4e18;
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+    .notice[data-tone="error"] { border-color: var(--danger-line); background: var(--danger-soft); color: #7c352a; }
+    .notice[data-tone="success"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
+
+    /* ==========================================================================
+       Statistik — satu permukaan terbagi, bukan empat kartu terpisah
+       ========================================================================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      box-shadow: var(--sh-1);
+    }
+    .stat { min-width: 0; padding: 14px 16px 15px; border-left: 1px solid var(--line); }
+    .stat:first-child { border-left: 0; }
+    .stat-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 650;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .stat-value {
+      display: block;
+      min-height: 26px;
+      margin-top: 9px;
+      overflow-wrap: anywhere;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      line-height: 1.25;
+    }
+    .stat-foot { margin-top: 3px; color: var(--muted); font-size: 10.5px; }
+
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 24px 0 10px; }
+    .section-head h2 { font-size: 13.5px; font-weight: 650; letter-spacing: -.012em; }
+    .section-head p { margin-top: 3px; color: var(--muted); font-size: 11.5px; }
+
+    /* ==========================================================================
+       Workflow canvas
+       ========================================================================== */
+    .workflow-panel {
+      margin-bottom: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      box-shadow: var(--sh-1);
+    }
+    .workflow-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+    .workflow-heading h2 { font-size: 13px; font-weight: 650; letter-spacing: -.01em; }
+    .workflow-heading p { max-width: 72ch; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .workflow-heading-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+
+    .workflow-live {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      gap: 7px;
+      padding: 0 10px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-pill);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 550;
+      white-space: nowrap;
+    }
+    .workflow-live::before { width: 6px; height: 6px; flex: none; border-radius: 50%; background: var(--faint); content: ""; }
+    .workflow-live[data-state="running"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
+    .workflow-live[data-state="running"]::before { background: #2f8b5f; animation: live-pulse 1.5s ease-in-out infinite; }
+    .workflow-live[data-state="completed"]::before { background: var(--accent); }
+    .workflow-live[data-state="failed"] { border-color: var(--danger-line); background: var(--danger-soft); color: var(--danger); }
+    .workflow-live[data-state="failed"]::before { background: var(--danger); }
+    @keyframes live-pulse { 50% { opacity: .3; } }
+
+    .workflow-canvas {
+      position: relative;
+      height: clamp(430px, 42vw, 620px);
+      overflow: hidden;
+      background-color: #fbfcfb;
+      background-image: radial-gradient(circle, #c2cec7 1px, transparent 1px);
+      background-size: 20px 20px;
+      cursor: grab;
+      touch-action: none;
+    }
+    .workflow-canvas::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      content: "";
+      background: radial-gradient(115% 100% at 50% 0%, transparent 58%, rgba(20, 32, 27, .05) 100%);
+      pointer-events: none;
+    }
+    .workflow-canvas[data-panning="true"] { cursor: grabbing; }
+
+    .workflow-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background: rgba(255, 255, 255, .93);
+      box-shadow: var(--sh-1), inset 0 1px 0 rgba(255, 255, 255, .7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .workflow-controls button {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid transparent;
+      border-radius: var(--r-xs);
+      background: transparent;
+      color: var(--ink-2);
+      transition: background var(--t), color var(--t), transform 90ms var(--ease);
+    }
+    .workflow-controls button:hover { background: var(--surface-3); color: var(--ink); }
+    .workflow-controls button:active { transform: scale(.94); }
+    .workflow-controls .icon { width: 14px; height: 14px; }
+    .workflow-zoom-label { min-width: 38px; color: var(--muted); font-family: var(--font-mono); font-size: 9.5px; text-align: center; }
+
+    .workflow-edit-actions {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 3;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      max-width: calc(100% - 20px);
+      padding: 6px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background: rgba(255, 255, 255, .95);
+      box-shadow: var(--sh-2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .workflow-edit-status { padding: 0 4px; color: var(--ink-2); font-size: 11px; }
+    .workflow-edit-actions button {
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-xs);
+      background: var(--surface);
+      color: var(--ink-2);
+      font-size: 11px;
+      font-weight: 600;
+      transition: background var(--t), border-color var(--t);
+    }
+    .workflow-edit-actions button:hover { background: var(--surface-2); border-color: var(--line-3); }
+    .workflow-edit-actions #workflow-save-layout { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .workflow-edit-actions #workflow-save-layout:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+
+    .workflow-board {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 1;
+      width: 1480px;
+      height: 820px;
+      margin: -410px 0 0 -740px;
+      transform: translate3d(0, 0, 0) scale(1);
+      transform-origin: center;
+      will-change: transform;
+    }
+    .workflow-wires { position: absolute; inset: 0; width: 1480px; height: 820px; overflow: visible; }
+    .workflow-wire {
+      fill: none;
+      stroke: #c2cec7;
+      stroke-width: 1.6;
+      marker-end: url(#workflow-arrow);
+      transition: stroke 200ms var(--ease), stroke-width 200ms var(--ease);
+    }
+    .workflow-wire[data-state="done"] { stroke: #6aa383; }
+    .workflow-wire[data-state="failed"] { stroke: #c07a6d; }
+    .workflow-wire-data, .workflow-wire-model { stroke-dasharray: 4 6; }
+    .workflow-wire-optional { stroke-dasharray: 3 5; }
+    .workflow-wire-service { stroke: #b7c4bd; }
+    .workflow-wire-return { stroke: #c9d2cd; stroke-dasharray: 6 6; }
+    .workflow-wire[data-state="active"] {
+      stroke: var(--accent);
+      stroke-width: 2;
+      stroke-dasharray: 7 7;
+      animation: workflow-flow .8s linear infinite;
+    }
+    @keyframes workflow-flow { to { stroke-dashoffset: -32; } }
+
+    .workflow-node {
+      position: absolute;
+      display: grid;
+      width: 180px;
+      min-height: 82px;
+      grid-template-columns: 32px minmax(0, 1fr);
+      align-content: center;
+      align-items: center;
+      gap: 3px 10px;
+      padding: 11px 13px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-md);
+      background: var(--surface);
+      box-shadow: var(--sh-1);
+      transition: border-color 180ms var(--ease), background 180ms var(--ease), box-shadow 180ms var(--ease);
+    }
+    .workflow-node[tabindex="0"], .workflow-decision-wrap[tabindex="0"] { cursor: pointer; }
+    .workflow-node[data-move-selected="true"], .workflow-decision-wrap[data-move-selected="true"] { z-index: 2; }
+    .workflow-node[data-move-selected="true"] { outline: 2px solid #c08b3f; outline-offset: 3px; cursor: grab; }
+    .workflow-node[data-moving="true"] { cursor: grabbing; user-select: none; }
+    .workflow-decision-wrap[data-move-selected="true"] .workflow-decision { cursor: grab; }
+
+    .workflow-node[data-state="active"] { border-color: var(--accent); background: #f6fbf8; box-shadow: 0 0 0 3px rgba(47, 106, 82, .1), var(--sh-1); }
+    .workflow-node[data-state="done"] { border-color: var(--accent-line); background: #fbfdfc; }
+    .workflow-node[data-state="failed"] { border-color: #d3a49b; background: #fdf7f6; }
+    .workflow-node[data-state="queued"] { border-color: var(--warn-line); background: #fdfaf2; }
+    .workflow-node[data-state="skipped"] { opacity: .5; }
+
+    .workflow-node-code {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      grid-row: span 2;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 650;
+      letter-spacing: .02em;
+    }
+    .workflow-node[data-state="active"] .workflow-node-code { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .workflow-node[data-state="failed"] .workflow-node-code { border-color: var(--danger); background: var(--danger); color: #fff; }
+    .workflow-node-title { color: var(--ink); font-size: 11px; font-weight: 650; letter-spacing: -.005em; line-height: 1.25; }
+    .workflow-node-state { color: var(--muted); font-size: 9.5px; line-height: 1.3; }
+
+    /* Posisi node: tetap seperti semula agar tata letak kanvas tidak bergeser. */
+    .workflow-node-trigger { left: 24px; top: 250px; width: 160px; min-height: 88px; }
+    .workflow-node-context { left: 250px; top: 250px; width: 190px; min-height: 88px; }
+    .workflow-node-agent { left: 535px; top: 240px; width: 230px; min-height: 108px; border-color: #24382f; background: #1a2a23; box-shadow: var(--sh-2); }
+    .workflow-node-agent .workflow-node-title { color: #f1f6f3; font-size: 13px; }
+    .workflow-node-agent .workflow-node-state { color: #9fb5a8; }
+    .workflow-node-agent .workflow-node-code { border-color: #35493f; background: #24382f; color: #b9d6c6; }
+    .workflow-node-agent[data-state="active"] { border-color: #5fa37f; background: #1f3229; box-shadow: 0 0 0 3px rgba(95, 163, 127, .18), var(--sh-2); }
+    .workflow-node-agent[data-state="done"] { border-color: #3f6653; background: #1c2e26; }
+    .workflow-node-agent[data-state="failed"] { border-color: #8d4b41; background: #2b1f1d; }
+    .workflow-node-agent[data-state="failed"] .workflow-node-title { color: #f6eae7; }
+    .workflow-node-reply { left: 1090px; top: 180px; width: 180px; min-height: 82px; }
+    .workflow-node-send { left: 1310px; top: 180px; width: 150px; min-height: 82px; }
+    .workflow-node-attachment { left: 24px; top: 450px; width: 160px; }
+    .workflow-node-workspace { left: 24px; top: 590px; width: 185px; }
+    .workflow-node-workspace::before {
+      position: absolute;
+      top: -6px;
+      left: 14px;
+      width: 34px;
+      height: 6px;
+      border: 1px solid var(--line-2);
+      border-bottom: 0;
+      border-radius: 3px 3px 0 0;
+      background: var(--surface);
+      content: "";
+    }
+    .workflow-node-service { width: 184px; min-height: 80px; }
+    .workflow-node-finance { left: 255px; top: 500px; }
+    .workflow-node-files { left: 475px; top: 500px; }
+    .workflow-node-office { left: 695px; top: 500px; }
+    .workflow-node-excel { left: 915px; top: 500px; }
+    .workflow-node-memory-tool { left: 255px; top: 650px; }
+    .workflow-node-history-tool { left: 475px; top: 650px; }
+    .workflow-node-utility { left: 695px; top: 650px; }
+    .workflow-node-web { left: 915px; top: 650px; }
+    .workflow-node-store {
+      width: 118px;
+      height: 118px;
+      min-height: 118px;
+      grid-template-columns: 1fr;
+      align-content: center;
+      justify-items: center;
+      gap: 4px;
+      padding: 10px;
+      border-radius: 50%;
+      text-align: center;
+    }
+    .workflow-node-store .workflow-node-code { width: 30px; height: 30px; grid-row: auto; }
+    .workflow-node-store .workflow-node-title { max-width: 92px; font-size: 9px; line-height: 1.2; }
+    .workflow-node-store .workflow-node-state { font-size: 8px; }
+    .workflow-node-history { left: 245px; top: 38px; }
+    .workflow-node-memory { left: 415px; top: 38px; }
+    .workflow-node-skills { left: 585px; top: 38px; }
+    .workflow-node-model { left: 755px; top: 38px; }
+
+    .workflow-decision-wrap { position: absolute; left: 830px; top: 244px; display: grid; width: 110px; height: 110px; place-items: center; }
+    .workflow-decision {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      transform: rotate(45deg);
+      border: 1px solid var(--warn-line);
+      border-radius: var(--r-md);
+      background: #fdfaf1;
+      box-shadow: var(--sh-1);
+    }
+    .workflow-decision[data-state="active"] { border-color: #b98f3f; background: #fbf3dd; box-shadow: 0 0 0 3px rgba(185, 143, 63, .16); }
+    .workflow-decision-label {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: 78px;
+      justify-items: center;
+      gap: 2px;
+      color: #6b531f;
+      font-size: 10px;
+      font-weight: 650;
+      text-align: center;
+    }
+    .workflow-decision-label small { color: #8f7a4c; font-size: 8px; font-weight: 500; }
+
+    .workflow-caption { padding: 9px 16px 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+
+    /* ==========================================================================
+       Tabel & daftar
+       ========================================================================== */
+    .data-surface {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      box-shadow: var(--sh-1);
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      height: 36px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 12.5px; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr { transition: background 120ms var(--ease); }
+    tbody tr:hover { background: var(--surface-2); }
+
+    .amount {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .kind-label {
+      display: inline-flex;
+      min-height: 21px;
+      align-items: center;
+      padding: 0 8px;
+      border: 1px solid var(--accent-line);
+      border-radius: var(--r-pill);
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .kind-label.expense { border-color: var(--warn-line); background: var(--warn-soft); color: #6d4e18; }
+    .mono { font-family: var(--font-mono); font-size: 11px; }
+    .muted { color: var(--muted); }
+
+    .empty-state {
+      display: grid;
+      justify-content: center;
+      justify-items: center;
+      gap: 8px;
+      padding: 34px 18px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    li.empty-state { display: grid; justify-content: center; padding: 34px 18px; border-bottom: 0; }
+    .empty-state::before {
+      width: 22px;
+      height: 22px;
+      background: currentColor;
+      content: "";
+      opacity: .32;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13h4.2l1.6 2.6h6.4L16.8 13H21'/%3E%3Cpath d='M5.6 5.6h12.8L21 13v4.4A1.6 1.6 0 0 1 19.4 19H4.6A1.6 1.6 0 0 1 3 17.4V13z'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13h4.2l1.6 2.6h6.4L16.8 13H21'/%3E%3Cpath d='M5.6 5.6h12.8L21 13v4.4A1.6 1.6 0 0 1 19.4 19H4.6A1.6 1.6 0 0 1 3 17.4V13z'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .split-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .85fr); gap: 18px; align-items: start; }
+    .split-grid > section { min-width: 0; }
+
+    .plain-list { margin: 0; padding: 0; list-style: none; }
+    .plain-list li { display: flex; justify-content: space-between; gap: 16px; padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+    .plain-list li:last-child { border-bottom: 0; }
+    .plain-list strong { font-family: var(--font-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    .bar-list { display: grid; gap: 13px; padding: 15px; }
+    .bar-row { display: grid; gap: 6px; }
+    .bar-meta { display: flex; justify-content: space-between; gap: 10px; color: var(--ink-2); font-size: 11px; }
+    .bar-track { height: 6px; overflow: hidden; border-radius: var(--r-pill); background: var(--surface-3); }
+    .bar-fill { height: 100%; border-radius: var(--r-pill); background: var(--accent); transition: width 400ms var(--ease); }
+    .bar-fill.expense { background: #b3854a; }
+
+    /* ==========================================================================
+       Toolbar & explorer
+       ========================================================================== */
+    .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-bottom: 14px; }
+    .toolbar .field { min-width: 170px; }
+    .toolbar input, .toolbar select { min-height: 37px; }
+    .file-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--line); }
+    .file-toolbar input {
+      width: min(320px, 100%);
+      min-height: 36px;
+      margin-left: auto;
+      padding: 0 10px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      font-size: 12px;
+    }
+
+    .explorer-shell {
+      display: grid;
+      min-height: 540px;
+      grid-template-columns: 196px minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      box-shadow: var(--sh-1);
+    }
+    .explorer-sidebar { min-width: 0; padding: 10px 8px; border-right: 1px solid var(--line); background: var(--surface-2); }
+    .explorer-nav { display: grid; gap: 2px; }
+    .explorer-nav-label {
+      margin: 14px 10px 6px;
+      color: var(--faint);
+      font-size: 9.5px;
+      font-weight: 650;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    #explorer-folders { display: grid; gap: 2px; }
+    .explorer-nav button {
+      display: flex;
+      width: 100%;
+      min-height: 32px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 9px;
+      border: 1px solid transparent;
+      border-radius: var(--r-sm);
+      background: transparent;
+      color: var(--ink-2);
+      font-size: 11.5px;
+      text-align: left;
+      overflow-wrap: anywhere;
+      transition: background var(--t), color var(--t);
+    }
+    .explorer-nav button:hover { background: var(--surface-3); color: var(--ink); }
+    .explorer-nav button[aria-current="page"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+    .explorer-nav-mark { display: grid; width: 14px; flex: 0 0 14px; place-items: center; color: var(--faint); }
+    .explorer-nav-mark .icon { width: 13px; height: 13px; }
+    .explorer-nav button[aria-current="page"] .explorer-nav-mark { color: var(--accent); }
+
+    .explorer-main { min-width: 0; }
+    .explorer-toolbar {
+      display: flex;
+      min-height: 52px;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .explorer-toolbar .plain-button { min-height: 32px; }
+    .explorer-toolbar input {
+      width: min(260px, 100%);
+      min-height: 32px;
+      margin-left: auto;
+      padding: 0 10px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      font-size: 11.5px;
+    }
+    .explorer-sort { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10.5px; white-space: nowrap; }
+    .explorer-sort select {
+      min-height: 32px;
+      padding: 0 26px 0 9px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      background-color: var(--surface);
+      font-size: 10.5px;
+    }
+    .explorer-crumb {
+      display: flex;
+      min-height: 36px;
+      align-items: center;
+      gap: 4px;
+      overflow: auto;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .explorer-crumb button { padding: 3px 2px; border: 0; border-radius: var(--r-xs); background: transparent; color: var(--ink-2); font-size: 11px; }
+    .explorer-crumb button:hover { color: var(--accent); text-decoration: underline; }
+    .explorer-crumb span { color: var(--faint); font-size: 10px; }
+    .explorer-list-heading { display: flex; min-height: 40px; align-items: center; justify-content: space-between; gap: 10px; padding: 0 13px; }
+    .explorer-list-heading h2 { font-size: 12px; font-weight: 650; }
+    .explorer-list-heading span { color: var(--muted); font-size: 10.5px; }
+    .explorer-table { min-width: 690px; }
+    .explorer-table th { height: 34px; }
+    .explorer-table td { padding-block: 8px; }
+    .explorer-file-open {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 11.5px;
+      font-weight: 600;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+    .explorer-file-open .icon { width: 13px; height: 13px; color: var(--faint); }
+    .explorer-file-open:hover { color: var(--accent); }
+    .explorer-file-open:hover .icon { color: var(--accent); }
+    .explorer-row-folder { background: var(--surface-2); }
+    .breadcrumb {
+      display: flex;
+      min-height: 42px;
+      align-items: center;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 0 13px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .breadcrumb button { padding: 5px; border: 0; background: transparent; color: var(--accent); font-size: 11px; }
+    .breadcrumb span { color: var(--faint); font-size: 11px; }
+    .file-name { overflow-wrap: anywhere; font-weight: 600; }
+    .file-path { margin-top: 3px; color: var(--muted); font-size: 10.5px; }
+    .file-type {
+      display: inline-block;
+      min-width: 37px;
+      padding: 3px 6px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-xs);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-align: center;
+    }
+    .row-actions { display: flex; justify-content: end; gap: 5px; white-space: nowrap; }
+    .row-actions button {
+      min-height: 28px;
+      padding: 0 9px;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-xs);
+      background: var(--surface);
+      color: var(--ink-2);
+      font-size: 10.5px;
+      font-weight: 550;
+      transition: background var(--t), border-color var(--t), color var(--t);
+    }
+    .row-actions button:hover { background: var(--surface-2); border-color: var(--line-3); color: var(--ink); }
+    .row-actions .danger { color: var(--danger); }
+    .row-actions .danger:hover { border-color: var(--danger-line); background: var(--danger-soft); }
+
+    /* ==========================================================================
+       Skills, settings, tools, backup
+       ========================================================================== */
+    .skills-list { display: grid; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--sh-1); }
+    .skill-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 15px; align-items: start; padding: 14px 15px; border-bottom: 1px solid var(--line); }
+    .skill-row:last-child { border-bottom: 0; }
+    .skill-name { font-size: 12.5px; font-weight: 650; }
+    .skill-description { margin-top: 4px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+    .skill-version { display: inline-block; margin-top: 7px; color: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+
+    .switch { position: relative; display: inline-flex; width: 40px; height: 24px; flex: none; align-items: center; }
+    .switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .switch-track {
+      width: 40px;
+      height: 24px;
+      padding: 3px;
+      border: 1px solid var(--line-3);
+      border-radius: var(--r-pill);
+      background: var(--surface-3);
+      transition: background var(--t), border-color var(--t);
+    }
+    .switch-track::after {
+      display: block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: var(--sh-1);
+      content: "";
+      transition: transform 200ms var(--ease);
+    }
+    .switch input:checked + .switch-track { border-color: var(--accent); background: var(--accent); }
+    .switch input:checked + .switch-track::after { transform: translateX(16px); }
+    .switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .switch input:disabled + .switch-track { opacity: .55; }
+
+    .settings-list { overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--sh-1); }
+    .settings-row { display: grid; grid-template-columns: minmax(140px, .8fr) minmax(0, 1.2fr); gap: 20px; padding: 12px 15px; border-bottom: 1px solid var(--line); }
+    .settings-row:last-child { border-bottom: 0; }
+    .settings-row dt { color: var(--muted); font-size: 11.5px; }
+    .settings-row dd { overflow-wrap: anywhere; color: var(--ink-2); font-family: var(--font-mono); font-size: 11.5px; }
+
+    .tool-layout { display: grid; grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 16px; align-items: start; }
+    .tool-list {
+      display: grid;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      box-shadow: var(--sh-1);
+    }
+    .tool-option {
+      min-height: 40px;
+      padding: 9px 12px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink-2);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      text-align: left;
+      overflow-wrap: anywhere;
+      transition: background var(--t), color var(--t);
+    }
+    .tool-option:last-child { border-bottom: 0; }
+    .tool-option:hover { background: var(--surface-2); color: var(--ink); }
+    .tool-option[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent); }
+    .tool-form-wrap { padding: 16px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--sh-1); }
+    .tool-form-wrap h2 { font-size: 13.5px; font-weight: 650; overflow-wrap: anywhere; }
+    .tool-description { margin: 5px 0 15px; color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+    .tool-fields { display: grid; gap: 12px; }
+    .tool-fields .field input[type="checkbox"] { width: 16px; min-height: 16px; }
+    .tool-result {
+      min-height: 45px;
+      max-height: 370px;
+      margin: 14px 0 0;
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      background: var(--surface-2);
+      color: var(--ink-2);
+      font: 11px/1.6 var(--font-mono);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .tool-result:empty { display: none; }
+    .tool-warning {
+      margin-top: 14px;
+      padding: 10px;
+      border-left: 3px solid var(--warn);
+      border-radius: 0 var(--r-xs) var(--r-xs) 0;
+      background: var(--warn-soft);
+      color: #6d4e18;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .backup-list { display: grid; margin: 0 0 18px; padding: 0; border-top: 1px solid var(--line); list-style: none; }
+    .backup-option { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 11px; align-items: start; padding: 14px 2px; border-bottom: 1px solid var(--line); }
+    .backup-option input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); }
+    .backup-option strong { display: block; font-size: 12.5px; font-weight: 650; }
+    .backup-option small { display: block; margin-top: 3px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+    .backup-submit { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+    .backup-import { margin-top: 32px; padding-top: 22px; border-top: 1px solid var(--line); }
+    .backup-import h2 { font-size: 13.5px; font-weight: 650; }
+    .backup-import-copy { margin: 5px 0 14px; color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+    .backup-drop {
+      position: relative;
+      display: grid;
+      min-height: 112px;
+      place-items: center;
+      gap: 4px;
+      padding: 18px;
+      border: 1px dashed var(--line-3);
+      border-radius: var(--r-md);
+      background: var(--surface-2);
+      cursor: pointer;
+      text-align: center;
+      transition: border-color var(--t), background var(--t);
+    }
+    .backup-drop:hover { border-color: var(--accent-line); background: var(--accent-soft); }
+    .backup-drop[data-dragging="true"] { border-color: var(--accent); background: var(--accent-soft); }
+    .backup-drop strong { font-size: 12.5px; font-weight: 650; }
+    .backup-drop small { color: var(--muted); font-size: 11px; }
+    .backup-drop input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+    .backup-file-name { min-height: 20px; margin: 8px 0 12px; color: var(--muted); font-family: var(--font-mono); font-size: 10px; overflow-wrap: anywhere; }
+
+    /* ==========================================================================
+       Dialog & toast
+       ========================================================================== */
+    .file-dialog {
+      width: min(560px, calc(100vw - 24px));
+      max-height: calc(100dvh - 32px);
+      padding: 0;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: var(--sh-pop);
+    }
+    .file-dialog::backdrop { background: rgba(12, 24, 19, .42); backdrop-filter: blur(3px); }
+    .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+    .dialog-head h2 { font-size: 13.5px; font-weight: 650; }
+    .dialog-body { display: grid; gap: 13px; padding: 16px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 10;
+      max-width: min(400px, calc(100vw - 40px));
+      padding: 11px 14px;
+      border: 1px solid #2c3f36;
+      border-radius: var(--r-md);
+      background: #17241e;
+      color: #eef4f0;
+      box-shadow: var(--sh-pop);
+      font-size: 12px;
+      line-height: 1.45;
+      animation: toast-in 220ms var(--ease) both;
+    }
+    .toast[data-tone="error"] { border-color: #7d3b30; background: #6f3227; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+    .skeleton {
+      color: transparent !important;
+      border-radius: var(--r-xs);
+      background: linear-gradient(90deg, #e9eeeb 25%, #f4f7f5 45%, #e9eeeb 65%);
+      background-size: 220% 100%;
+      animation: shimmer 1.3s ease-in-out infinite;
+    }
+    @keyframes shimmer { to { background-position-x: -220%; } }
+
+    /* ==========================================================================
+       Responsif
+       ========================================================================== */
+    @media (max-width: 1080px) {
+      .app-shell { grid-template-columns: 208px minmax(0, 1fr); }
+      .sidebar { padding-inline: 10px; }
+      .topbar { padding-inline: 22px; }
+      .page-wrap { padding-inline: 22px; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stat:nth-child(odd) { border-left: 0; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    }
+
+    @media (max-width: 900px) {
+      .login-screen { grid-template-columns: 1fr; }
+      .login-aside { display: none; }
+      .login-panel { padding: 40px 20px; }
+      .app-shell { display: block; }
+      .sidebar { position: sticky; z-index: 5; height: auto; padding: 10px 12px 0; border-right: 0; border-bottom: 1px solid var(--rail-line); }
+      .sidebar .brand-lockup { min-height: 42px; }
+      .sidebar .brand-mark { width: 30px; height: 30px; }
+      .nav-group {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        margin: 10px -12px 0;
+        padding: 0 12px 9px;
+      }
+      .nav-label, .sidebar-bottom { display: none; }
+      .nav-link { width: auto; min-width: max-content; min-height: 34px; gap: 7px; padding: 0 10px; font-size: 11.5px; }
+      .nav-link[aria-current="page"]::before { display: none; }
+      .nav-code { width: auto; }
+      .topbar { position: static; min-height: 54px; padding: 0 16px; }
+      .page-wrap { padding: 20px 16px 40px; }
+      .page-heading { align-items: center; }
+      .page-heading h1 { font-size: 22px; }
+      .split-grid, .tool-layout { grid-template-columns: 1fr; }
+      .explorer-shell { display: block; min-height: 0; }
+      .explorer-sidebar { padding: 7px 8px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .explorer-nav { display: flex; gap: 4px; overflow-x: auto; }
+      #explorer-folders { display: flex; gap: 4px; }
+      .explorer-nav-label { display: none; }
+      .explorer-nav button { width: auto; min-width: max-content; min-height: 32px; }
+      .explorer-toolbar input { width: 100%; margin-left: 0; }
+      .workflow-canvas { height: 460px; }
+    }
+
+    /* ---- Tablet / HP: ringan dulu ---- */
+    @media (max-width: 900px) {
+      .topbar { background: var(--surface-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
+      .workflow-canvas::before { display: none; }
+      .workflow-wire[data-state="active"] { animation: none; stroke-dasharray: none; }
+      .workflow-node, .workflow-decision, .data-surface, .stat { box-shadow: none; }
+      .nav-group { overscroll-behavior-x: contain; scrollbar-width: none; }
+      .nav-group::-webkit-scrollbar { display: none; }
+    }
+
+    @media (max-width: 620px) {
+      /* Tipografi mobile: naik satu tingkat agar terbaca tanpa zoom */
+      body { font-size: 14px; }
+      .page-heading p, .login-copy { font-size: 13px; }
+      .page-heading h1 { font-size: 21px; }
+      td { font-size: 13.5px; }
+      th { font-size: 11px; }
+      .stat-label { font-size: 11px; }
+      .stat-foot { font-size: 11.5px; }
+      .workflow-caption, .workflow-heading p { font-size: 12px; }
+      .section-head p, .skill-description, .tool-description { font-size: 12.5px; }
+      .backup-option small, .backup-import-copy { font-size: 12.5px; }
+      .notice { font-size: 12.5px; }
+      .explorer-list-heading span { font-size: 11.5px; }
+      .mono, .amount, .plain-list strong { font-size: 12.5px; }
+      .settings-row dt, .settings-row dd { font-size: 12.5px; }
+      .tool-option { font-size: 12px; }
+      .backup-file-name, .file-path, .file-type { font-size: 11px; }
+      .workflow-node-title { font-size: 13px; }
+      .workflow-node-state { font-size: 11px; }
+      .workflow-node-code { font-size: 10.5px; }
+      .workflow-decision-label { font-size: 12px; }
+      .workflow-decision-label small { font-size: 10px; }
+
+      /* Target sentuh 44px */
+      .plain-button { min-height: 44px; font-size: 13px; }
+      .nav-link { min-height: 44px; font-size: 13px; }
+      .explorer-nav button { min-height: 42px; font-size: 12.5px; }
+      .row-actions button { min-height: 42px; font-size: 12px; }
+      .explorer-crumb button { min-height: 38px; font-size: 12.5px; }
+      .workflow-controls button { width: 40px; height: 40px; }
+      .workflow-edit-actions button { min-height: 40px; }
+
+      /* Header lebih ringkas: kurangi tinggi chrome */
+      .topbar { min-height: 50px; padding-inline: 14px; }
+      .topbar-subtitle { display: none; }
+      .topbar-title { font-size: 14px; }
+      .sidebar { padding-top: 6px; }
+      .sidebar .brand-lockup { min-height: 34px; }
+      .sidebar .brand-caption { display: none; }
+      .sidebar .brand-mark { width: 28px; height: 28px; font-size: 10px; }
+      .nav-group { margin-top: 6px; padding-bottom: 7px; }
+      .page-wrap { padding-top: 16px; }
+
+      /* Petunjuk bahwa navigasi masih bisa digeser */
+      .nav-group {
+        -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+        mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+        scroll-snap-type: x proximity;
+      }
+      .nav-link { scroll-snap-align: start; }
+
+      .page-heading { display: block; }
+      .heading-actions { margin-top: 12px; }
+      .heading-actions .plain-button { flex: 1 1 auto; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat { border-left: 0; padding: 12px 14px 13px; }
+      .stat:nth-child(n+2) { border-top: 1px solid var(--line); }
+      .stat-value { font-size: 17px; }
+      .toolbar { align-items: stretch; }
+      .toolbar .field { min-width: 100%; }
+      .settings-row { grid-template-columns: 1fr; gap: 5px; }
+      .topbar-subtitle { max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .connection-chip { min-height: 26px; padding-inline: 8px; font-size: 10.5px; }
+      .topbar-actions { gap: 7px; }
+      .workflow-heading { align-items: flex-start; }
+      .workflow-heading-actions { gap: 5px; }
+      .workflow-live { min-height: 23px; padding-inline: 7px; font-size: 10px; }
+      .workflow-canvas { height: 380px; }
+      .backup-submit { align-items: stretch; }
+      .backup-submit .primary-button { flex: 1 1 auto; }
+
+      /* Cegah iOS memperbesar halaman saat input difokuskan */
+      .field input, .field select, .field textarea,
+      .explorer-toolbar input, .explorer-sort select, .file-toolbar input { font-size: 16px; }
+
+      /* Tabel panjang jadi kartu bertumpuk, tanpa scroll horizontal */
+      .table-wrap { overflow: visible; }
+      #page-overview table, #page-transactions table, .explorer-table { display: block; }
+      #page-overview table thead, #page-transactions table thead, .explorer-table thead { display: none; }
+      #overview-transactions, #transaction-rows, #file-rows { display: block; width: 100%; }
+      #overview-transactions tr, #transaction-rows tr, #file-rows tr {
+        display: block;
+        padding: 10px 13px 11px;
+        border-bottom: 1px solid var(--line);
+      }
+      #overview-transactions tr:last-child, #transaction-rows tr:last-child, #file-rows tr:last-child { border-bottom: 0; }
+      #overview-transactions td, #transaction-rows td, #file-rows td {
+        display: flex;
+        min-height: 0;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 3px 0;
+        border: 0;
+        text-align: right;
+      }
+      #overview-transactions td::before, #transaction-rows td::before, #file-rows td::before {
+        flex: none;
+        color: var(--muted);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-align: left;
+        text-transform: uppercase;
+      }
+      #overview-transactions td[colspan]::before,
+      #transaction-rows td[colspan]::before,
+      #file-rows td[colspan]::before { content: none; }
+      #overview-transactions td[colspan], #transaction-rows td[colspan], #file-rows td[colspan] { display: block; text-align: center; }
+
+      #overview-transactions td:nth-child(1)::before { content: "Tanggal"; }
+      #overview-transactions td:nth-child(2)::before { content: "Jenis"; }
+      #overview-transactions td:nth-child(3)::before { content: "Deskripsi"; }
+      #overview-transactions td:nth-child(4)::before { content: "Kategori"; }
+      #overview-transactions td:nth-child(5)::before { content: "Jumlah"; }
+
+      #transaction-rows td:nth-child(1)::before { content: "ID"; }
+      #transaction-rows td:nth-child(2)::before { content: "Tanggal"; }
+      #transaction-rows td:nth-child(3)::before { content: "Jenis"; }
+      #transaction-rows td:nth-child(4)::before { content: "Deskripsi"; }
+      #transaction-rows td:nth-child(5)::before { content: "Kategori"; }
+      #transaction-rows td:nth-child(6)::before { content: "Jumlah"; }
+      #transaction-rows td:nth-child(7)::before { content: none; }
+
+      #file-rows td:nth-child(2)::before { content: "Lokasi"; }
+      #file-rows td:nth-child(3)::before { content: "Diubah"; }
+      #file-rows td:nth-child(4)::before { content: "Jenis"; }
+      #file-rows td:nth-child(5)::before { content: "Ukuran"; }
+      #file-rows td:nth-child(6)::before { content: none; }
+
+      /* Sel judul di kartu berkas */
+      #file-rows td:nth-child(1) { display: block; padding-bottom: 6px; text-align: left; }
+      #file-rows td:nth-child(6) { justify-content: flex-end; padding-top: 8px; }
+      #transaction-rows td:nth-child(7) { justify-content: flex-end; padding-top: 8px; }
+      #file-rows .file-path { margin-top: 0; }
+      .explorer-table { min-width: 0; }
+
+      .row-actions button { min-height: 38px; padding-inline: 12px; }
+
+      /* Dialog jadi bottom sheet */
+      .file-dialog {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        margin: auto 0 0;
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+      }
+      .dialog-actions .plain-button, .dialog-actions .primary-button { flex: 1 1 0; }
+
+      .toast { right: 12px; left: 12px; bottom: 12px; max-width: none; }
+    }
+
+    /* Target sentuh nyaman di perangkat tanpa hover */
+    @media (hover: none) {
+      .plain-button, .row-actions button, .explorer-crumb button, .backup-drop { min-height: 40px; }
+      .nav-link { min-height: 40px; }
+      .explorer-nav button { min-height: 38px; }
+      .switch { width: 44px; height: 26px; }
+      .switch-track { width: 44px; height: 26px; }
+      .switch input:checked + .switch-track::after { transform: translateX(18px); }
+      button { -webkit-tap-highlight-color: transparent; }
+    }
+
+    /* Notch / gesture bar */
+    @supports (padding: max(0px)) {
+      .page-wrap {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        padding-bottom: max(40px, env(safe-area-inset-bottom));
+      }
+      .sidebar { padding-top: max(10px, env(safe-area-inset-top)); }
+      .toast { bottom: max(12px, env(safe-area-inset-bottom)); }
+    }
+
+    @media (max-width: 620px) and (orientation: landscape) {
+      .workflow-canvas { height: 300px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;overflow:hidden">
+    <defs>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.7"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.7"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.7"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.7"></rect></symbol>
+      <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 4h12v15l-2.4-1.6L13.2 19 10.8 17.4 8.4 19 6 17.4Z"></path><path d="M9 8.5h6"></path><path d="M9 12h4"></path></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 6.8a1.5 1.5 0 0 1 1.5-1.5h3.4l1.8 2.2h8.3a1.5 1.5 0 0 1 1.5 1.5v8.7a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5Z"></path></symbol>
+      <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="4" rx="1.3"></rect><path d="M5 8.5v9.2a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8V8.5"></path><path d="M10 12.5h4"></path></symbol>
+      <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1.7"></rect><path d="M3.5 9.5h17"></path><path d="M9.5 9.5v10"></path></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.8 8.2 4.4-8.2 4.4-8.2-4.4z"></path><path d="m4.4 12.6 7.6 4.1 7.6-4.1"></path></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 8h6"></path><path d="M14 8h6"></path><path d="M4 16h10"></path><path d="M18 16h2"></path><circle cx="12" cy="8" r="2"></circle><circle cx="16" cy="16" r="2"></circle></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="m3.8 10.4 8.2-6.4 8.2 6.4"></path><path d="M5.8 9v9.2a1.3 1.3 0 0 0 1.3 1.3h9.8a1.3 1.3 0 0 0 1.3-1.3V9"></path><path d="M10 19.5v-5h4v5"></path></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"></circle><path d="M12 7.6V12l3 1.9"></path></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13"></path><path d="M5.5 12h13"></path></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"></path></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M9 4.5H5.8a1.3 1.3 0 0 0-1.3 1.3V9"></path><path d="M15 4.5h3.2a1.3 1.3 0 0 1 1.3 1.3V9"></path><path d="M9 19.5H5.8a1.3 1.3 0 0 1-1.3-1.3V15"></path><path d="M15 19.5h3.2a1.3 1.3 0 0 0 1.3-1.3V15"></path></symbol>
+    </defs>
+  </svg>
+
+  <section class="login-screen" id="login-screen" aria-labelledby="login-title" hidden>
+    <div class="login-aside" aria-hidden="true">
+      <div class="login-aside-brand">
+        <span class="brand-mark">WA</span>
+        <div><div class="brand-name">Finance Agent</div><div class="brand-caption">Panel operasional</div></div>
+      </div>
+      <div class="login-aside-body">
+        <p class="login-aside-kicker">WhatsApp · SQLite · AI</p>
+        <p class="login-aside-title">Satu panel untuk buku kas, berkas, dan jejak kerja agent.</p>
+        <ul class="login-aside-list">
+          <li>Ledger transaksi dengan audit koreksi</li>
+          <li>Workspace berkas privat per nomor</li>
+          <li>Backup ZIP dan pemulihan terpilih</li>
+        </ul>
+      </div>
+      <p class="login-aside-foot">Sesi panel 12 jam · akses hanya untuk pemilik workspace</p>
+    </div>
+    <form class="login-panel" id="login-form">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">WA</span>
+        <div><div class="brand-name">Finance Agent</div><div class="brand-caption">Panel operasional</div></div>
+      </div>
+      <h1 id="login-title">Masuk ke panel</h1>
+      <p class="login-copy">Gunakan password panel yang dikonfigurasi pada server.</p>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button class="primary-button" id="login-submit" type="submit">Masuk</button>
+      <p class="error-message" id="login-error" role="status" aria-live="polite"></p>
+      <p class="helper-copy">Sesi panel berlaku selama 12 jam dan berakhir saat keluar atau sesi server kedaluwarsa.</p>
+      <div class="login-links" id="login-links" hidden>
+        <a id="login-link-router" href="#" target="_blank" rel="noopener">Admin 9router</a>
+        <a id="login-link-qr" href="/api/whatsapp/qr" target="_blank" rel="noopener">QR WhatsApp</a>
+      </div>
+    </form>
+  </section>
+
+  <div class="app-shell" id="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">WA</span>
+        <div><div class="brand-name">Finance Agent</div><div class="brand-caption">WhatsApp · Pterodactyl</div></div>
+      </div>
+      <nav class="nav-group" aria-label="Navigasi panel">
+        <p class="nav-label">Workspace</p>
+        <button class="nav-link" type="button" data-page="overview" aria-current="page"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-grid"></use></svg></span>Dashboard</button>
+        <button class="nav-link" type="button" data-page="transactions"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-receipt"></use></svg></span>Transaksi</button>
+        <button class="nav-link" type="button" data-page="files"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-folder"></use></svg></span>Berkas</button>
+        <button class="nav-link" type="button" data-page="backup"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-archive"></use></svg></span>Cloud Backup</button>
+        <button class="nav-link" type="button" data-page="excel"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-table"></use></svg></span>Excel MCP</button>
+        <button class="nav-link" type="button" data-page="skills"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-layers"></use></svg></span>Skills</button>
+        <button class="nav-link" type="button" data-page="settings"><span class="nav-code" aria-hidden="true"><svg class="icon"><use href="#i-sliders"></use></svg></span>Pengaturan</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-owner" id="owner-number">Workspace owner</div>
+        <div class="sidebar-version">Node.js · WhatsApp Baileys</div>
+      </div>
+    </aside>
+
+    <div class="main-column">
+      <header class="topbar">
+        <div><p class="topbar-title" id="topbar-title">Ringkasan</p><div class="topbar-subtitle" id="topbar-subtitle">Status layanan dan buku transaksi</div></div>
+        <div class="topbar-actions">
+          <span class="connection-chip" id="top-status" data-state="checking"><span class="connection-dot" aria-hidden="true"></span><span id="top-status-label">Memeriksa</span></span>
+          <button class="plain-button" id="logout-button" type="button">Keluar</button>
+        </div>
+      </header>
+
+      <main class="page-wrap" id="main-content">
+        <section class="page" id="page-overview" aria-labelledby="overview-title">
+          <div class="page-heading">
+            <div><h1 id="overview-title">Dashboard</h1><p>Status agent dan aktivitas buku transaksi.</p></div>
+            <div class="heading-actions"><button class="plain-button" type="button" data-refresh>Perbarui data</button></div>
+          </div>
+          <p class="notice" id="overview-notice" role="status" hidden></p>
+          <section class="workflow-panel" id="workflow-panel" aria-labelledby="workflow-title">
+            <div class="workflow-heading">
+              <div><h2 id="workflow-title">Aktivitas AI</h2><p id="workflow-description">Aktivitas agent live. Geser kanvas untuk melihat alur; ketuk dua kali node untuk mengatur posisinya.</p></div>
+              <div class="workflow-heading-actions">
+                <span class="workflow-live" id="workflow-live" data-state="idle">Idle</span>
+              </div>
+            </div>
+            <div class="workflow-canvas">
+              <div class="workflow-controls" aria-label="Kontrol canvas workflow">
+                <button id="workflow-zoom-out" type="button" title="Perkecil" aria-label="Perkecil workflow"><svg class="icon" aria-hidden="true"><use href="#i-minus"></use></svg></button>
+                <output class="workflow-zoom-label" id="workflow-zoom-label">100%</output>
+                <button id="workflow-zoom-in" type="button" title="Perbesar" aria-label="Perbesar workflow"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg></button>
+                <button id="workflow-reset-view" type="button" title="Atur ulang tampilan" aria-label="Atur ulang tampilan workflow"><svg class="icon" aria-hidden="true"><use href="#i-fit"></use></svg></button>
+              </div>
+              <div class="workflow-edit-actions" id="workflow-edit-actions" aria-label="Edit posisi node" hidden>
+                <span class="workflow-edit-status" id="workflow-edit-status" aria-live="polite"></span>
+                <button id="workflow-cancel-layout" type="button">Batal</button>
+                <button id="workflow-save-layout" type="button">Selesai</button>
+              </div>
+              <div class="workflow-board" aria-label="Alur workflow agent">
+                <svg class="workflow-wires" viewBox="0 0 1480 820" aria-hidden="true">
+                  <defs><marker id="workflow-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="context-stroke"></path></marker></defs>
+                  <path class="workflow-wire workflow-wire-data" data-workflow-edge="message-history" d="M104 250 C104 178 245 178 304 156"></path>
+                  <path class="workflow-wire" data-workflow-edge="message-context" d="M184 294 H250"></path>
+                  <path class="workflow-wire workflow-wire-optional" data-workflow-edge="message-attachment" d="M104 338 V450"></path>
+                  <path class="workflow-wire workflow-wire-optional" data-workflow-edge="attachment-workspace" d="M104 532 V590"></path>
+                  <path class="workflow-wire workflow-wire-optional" data-workflow-edge="workspace-context" d="M209 630 C226 630 218 294 250 294"></path>
+                  <path class="workflow-wire workflow-wire-data" data-workflow-edge="history-context" d="M304 156 C304 205 340 210 340 250"></path>
+                  <path class="workflow-wire workflow-wire-data" data-workflow-edge="memory-context" d="M474 156 C474 200 380 205 365 250"></path>
+                  <path class="workflow-wire workflow-wire-data" data-workflow-edge="skills-agent" d="M644 156 C644 192 650 202 650 240"></path>
+                  <path class="workflow-wire" data-workflow-edge="context-agent" d="M440 294 H535"></path>
+                  <path class="workflow-wire workflow-wire-model" data-workflow-edge="agent-model" d="M650 240 C690 192 814 192 814 156"></path>
+                  <path class="workflow-wire workflow-wire-model" data-workflow-edge="model-agent" d="M814 156 C910 204 900 315 765 315"></path>
+                  <path class="workflow-wire" data-workflow-edge="agent-decision" d="M765 294 H840"></path>
+                  <path class="workflow-wire" data-workflow-edge="decision-reply" d="M930 299 C1005 299 1010 221 1090 221"></path>
+                  <path class="workflow-wire" data-workflow-edge="reply-send" d="M1270 221 H1310"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-finance" d="M855 350 C770 408 470 420 347 500"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-files" d="M870 354 C820 413 665 435 567 500"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-office" d="M900 354 C900 410 850 440 787 500"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-excel" d="M915 345 C1000 400 1050 430 1007 500"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-memoryTool" d="M850 345 C740 458 460 520 347 650"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-historyTool" d="M870 354 C820 475 660 530 567 650"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-utility" d="M900 354 C930 465 865 540 787 650"></path>
+                  <path class="workflow-wire workflow-wire-service" data-workflow-edge="decision-web" d="M925 340 C1080 440 1080 535 1007 650"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="finance-agent" d="M347 500 C350 420 535 420 570 348"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="files-agent" d="M567 500 C540 430 585 410 610 348"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="office-agent" d="M787 500 C780 430 710 410 680 348"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="excel-agent" d="M1007 500 C980 420 830 395 750 330"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="memoryTool-agent" d="M347 650 C360 510 535 455 570 348"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="historyTool-agent" d="M567 650 C570 510 610 450 625 348"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="utility-agent" d="M787 650 C790 500 705 440 680 348"></path>
+                  <path class="workflow-wire workflow-wire-return" data-workflow-edge="web-agent" d="M1007 650 C1020 485 850 405 750 330"></path>
+                </svg>
+                <article class="workflow-node workflow-node-trigger" data-workflow-node="message" data-state="pending"><span class="workflow-node-code">WA</span><span class="workflow-node-title">Pesan masuk</span><span class="workflow-node-state">Trigger</span></article>
+                <article class="workflow-node workflow-node-context" data-workflow-node="context" data-state="pending"><span class="workflow-node-code">CTX</span><span class="workflow-node-title">Context Builder</span><span class="workflow-node-state">Menyusun prompt</span></article>
+                <article class="workflow-node workflow-node-agent" data-workflow-node="agent" data-state="pending"><span class="workflow-node-code">AI</span><span class="workflow-node-title">AI Agent</span><span class="workflow-node-state">Tool calling</span></article>
+                <div class="workflow-decision-wrap" data-workflow-move-node="decision"><span class="workflow-decision" data-workflow-node="decision" data-state="pending"></span><span class="workflow-decision-label">Router<small>Tool atau balasan</small></span></div>
+                <article class="workflow-node workflow-node-reply" data-workflow-node="reply" data-state="pending"><span class="workflow-node-code">OUT</span><span class="workflow-node-title">Balasan</span><span class="workflow-node-state">Format respons</span></article>
+                <article class="workflow-node workflow-node-send" data-workflow-node="send" data-state="pending"><span class="workflow-node-code">WA</span><span class="workflow-node-title">WhatsApp</span><span class="workflow-node-state">Kirim jawaban</span></article>
+                <article class="workflow-node workflow-node-attachment" data-workflow-node="attachment" data-state="pending"><span class="workflow-node-code">IN</span><span class="workflow-node-title">Lampiran</span><span class="workflow-node-state">Opsional</span></article>
+                <article class="workflow-node workflow-node-workspace" data-workflow-node="workspace" data-state="pending"><span class="workflow-node-code">FS</span><span class="workflow-node-title">File Explorer Workspace</span><span class="workflow-node-state">Simpan file</span></article>
+                <article class="workflow-node workflow-node-store workflow-node-history" data-workflow-node="history" data-state="pending"><span class="workflow-node-code">DB</span><span class="workflow-node-title">Conversation History</span><span class="workflow-node-state">SQLite</span></article>
+                <article class="workflow-node workflow-node-store workflow-node-memory" data-workflow-node="memory" data-state="pending"><span class="workflow-node-code">MEM</span><span class="workflow-node-title">Memory Store</span><span class="workflow-node-state">SQLite</span></article>
+                <article class="workflow-node workflow-node-store workflow-node-skills" data-workflow-node="skills" data-state="pending"><span class="workflow-node-code">SK</span><span class="workflow-node-title">System Skills</span><span class="workflow-node-state">JSON</span></article>
+                <article class="workflow-node workflow-node-store workflow-node-model" data-workflow-node="model" data-state="pending"><span class="workflow-node-code">LLM</span><span class="workflow-node-title">AI Chat Model</span><span class="workflow-node-state">Reasoning + tools</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-finance" data-workflow-node="finance" data-state="pending"><span class="workflow-node-code">LED</span><span class="workflow-node-title">Finance Ledger</span><span class="workflow-node-state">SQLite</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-files" data-workflow-node="files" data-state="pending"><span class="workflow-node-code">MCP</span><span class="workflow-node-title">File Explorer MCP</span><span class="workflow-node-state">Workspace ops</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-office" data-workflow-node="office" data-state="pending"><span class="workflow-node-code">DOC</span><span class="workflow-node-title">Office Documents</span><span class="workflow-node-state">XLSX / DOCX</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-excel" data-workflow-node="excel" data-state="pending"><span class="workflow-node-code">XLS</span><span class="workflow-node-title">Excel MCP</span><span class="workflow-node-state">Workbook tools</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-memory-tool" data-workflow-node="memoryTool" data-state="pending"><span class="workflow-node-code">MEM</span><span class="workflow-node-title">Memory Tool</span><span class="workflow-node-state">Read / update</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-history-tool" data-workflow-node="historyTool" data-state="pending"><span class="workflow-node-code">HIST</span><span class="workflow-node-title">History Search</span><span class="workflow-node-state">Conversation</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-utility" data-workflow-node="utility" data-state="pending"><span class="workflow-node-code">CALC</span><span class="workflow-node-title">Utility Tools</span><span class="workflow-node-state">Calculate / time</span></article>
+                <article class="workflow-node workflow-node-service workflow-node-web" data-workflow-node="web" data-state="pending"><span class="workflow-node-code">WEB</span><span class="workflow-node-title">Web Search</span><span class="workflow-node-state">Public data</span></article>
+              </div>
+            </div>
+            <p class="workflow-caption" id="workflow-caption" aria-live="polite">Menunggu aktivitas dari nomor owner panel.</p>
+          </section>
+          <div class="stats-grid">
+            <article class="stat"><span class="stat-label">WhatsApp</span><strong class="stat-value" id="stat-whatsapp">Memeriksa</strong><div class="stat-foot" id="stat-whatsapp-foot">Status koneksi live</div></article>
+            <article class="stat"><span class="stat-label">Pemasukan bulan ini</span><strong class="stat-value" id="stat-income">—</strong><div class="stat-foot" id="stat-income-foot">Transaksi aktif</div></article>
+            <article class="stat"><span class="stat-label">Pengeluaran bulan ini</span><strong class="stat-value" id="stat-expense">—</strong><div class="stat-foot" id="stat-expense-foot">Transaksi aktif</div></article>
+            <article class="stat"><span class="stat-label">Transaksi terbaru</span><strong class="stat-value" id="stat-count">—</strong><div class="stat-foot" id="stat-count-foot">Maksimum 25 baris</div></article>
+          </div>
+          <div class="split-grid">
+            <section>
+              <div class="section-head"><div><h2>Transaksi terbaru</h2><p>Catatan aktif terbaru dari owner panel.</p></div><button class="plain-button" type="button" data-go="transactions">Semua transaksi</button></div>
+              <div class="data-surface table-wrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Deskripsi</th><th>Kategori</th><th>Jumlah</th></tr></thead><tbody id="overview-transactions"></tbody></table></div>
+            </section>
+            <section>
+              <div class="section-head"><div><h2>Ringkasan kategori</h2><p id="overview-month-label">Periode bulan ini</p></div></div>
+              <div class="data-surface"><ul class="plain-list" id="category-summary"></ul></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-transactions" aria-labelledby="transactions-title" hidden>
+          <div class="page-heading">
+            <div><h1 id="transactions-title">Transaksi</h1><p>Tinjau catatan aktif dan unduh CSV yang dihitung dari ledger.</p></div>
+            <div class="heading-actions"><button class="plain-button" id="export-csv" type="button">Unduh CSV</button></div>
+          </div>
+          <div class="toolbar">
+            <div class="field"><label for="book-selector">Buku transaksi</label><select id="book-selector" aria-describedby="book-workbook-reference"></select><small class="muted" id="book-workbook-reference">Memuat buku…</small></div>
+            <button class="plain-button" id="create-book-button" type="button">Buat buku</button>
+            <button class="plain-button" id="open-book-workbook" type="button">Buka workbook</button>
+            <div class="field"><label for="transaction-month">Periode ringkasan</label><input id="transaction-month" type="month"></div>
+            <div class="muted" id="transaction-summary-label"></div>
+          </div>
+          <p class="notice" id="book-notice" role="status" hidden></p>
+          <p class="notice" id="transaction-notice" role="status" hidden></p>
+          <div class="stats-grid" id="transaction-stats">
+            <article class="stat"><span class="stat-label">Pemasukan</span><strong class="stat-value" id="transaction-income">—</strong></article>
+            <article class="stat"><span class="stat-label">Pengeluaran</span><strong class="stat-value" id="transaction-expense">—</strong></article>
+            <article class="stat"><span class="stat-label">Jumlah catatan</span><strong class="stat-value" id="transaction-count">—</strong></article>
+            <article class="stat"><span class="stat-label">Mata uang</span><strong class="stat-value" id="transaction-currency">—</strong></article>
+          </div>
+          <div class="section-head"><div><h2>Riwayat aktif</h2><p>25 transaksi terakhir di buku terpilih. Koreksi finansial tetap melalui agent agar jejak audit terjaga.</p></div></div>
+          <div class="data-surface table-wrap"><table><thead><tr><th>ID</th><th>Tanggal</th><th>Jenis</th><th>Deskripsi</th><th>Kategori</th><th>Jumlah</th><th></th></tr></thead><tbody id="transaction-rows"></tbody></table></div>
+        </section>
+
+        <section class="page" id="page-files" aria-labelledby="files-title" hidden>
+          <div class="page-heading"><div><h1 id="files-title">Berkas</h1><p>Workspace privat milik nomor owner panel. File yang dikirim lewat WhatsApp muncul di sini.</p></div></div>
+          <p class="notice" id="files-notice" role="status" hidden></p>
+          <div class="explorer-shell">
+            <aside class="explorer-sidebar" aria-label="Navigasi workspace">
+              <nav class="explorer-nav" id="explorer-nav">
+                <button type="button" data-explorer-view="all" aria-current="page"><span class="explorer-nav-mark" aria-hidden="true"><svg class="icon"><use href="#i-home"></use></svg></span>Beranda · semua file</button>
+                <button type="button" data-explorer-view="recent"><span class="explorer-nav-mark" aria-hidden="true"><svg class="icon"><use href="#i-clock"></use></svg></span>Terbaru</button>
+                <p class="explorer-nav-label">Folder</p>
+                <div id="explorer-folders"></div>
+              </nav>
+            </aside>
+            <div class="explorer-main">
+              <div class="explorer-toolbar">
+                <button class="plain-button" id="folder-up" type="button">Naik</button>
+                <button class="plain-button" id="files-refresh" type="button">Muat ulang</button>
+                <button class="plain-button" id="new-folder" type="button">Folder baru</button>
+                <button class="plain-button" id="new-text-file" type="button">File teks</button>
+                <label class="explorer-sort">Urutkan<select id="files-sort" aria-label="Urutkan file"><option value="name">Nama</option><option value="modified">Tanggal</option><option value="size">Ukuran</option><option value="type">Jenis</option></select></label>
+                <input id="file-search" type="search" placeholder="Cari di semua file" aria-label="Cari berkas workspace">
+              </div>
+              <nav class="explorer-crumb" id="file-breadcrumb" aria-label="Lokasi workspace"></nav>
+              <div class="explorer-list-heading"><h2 id="files-view-title">Semua file</h2><span id="files-count"></span></div>
+              <div class="table-wrap"><table class="explorer-table"><thead><tr><th>Nama</th><th>Lokasi</th><th>Tanggal diubah</th><th>Jenis</th><th>Ukuran</th><th></th></tr></thead><tbody id="file-rows"></tbody></table></div>
+              <div class="explorer-list-heading" style="margin-top:26px"><h2>Tautan workspace</h2><span id="share-links-count"></span></div>
+              <p class="muted" style="margin:4px 0 10px">Link publik untuk folder workspace. Agent bisa membuatnya otomatis; rotate membuat link lama mati.</p>
+              <div class="table-wrap"><table class="explorer-table"><thead><tr><th>Nama</th><th>Folder</th><th>Terakhir diubah</th><th></th></tr></thead><tbody id="share-link-rows"></tbody></table></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-backup" aria-labelledby="backup-title" hidden>
+          <div class="page-heading"><div><h1 id="backup-title">Cloud Backup</h1><p>Pilih data yang akan dikemas menjadi ZIP untuk diunduh. Arsip disimpan sementara di server Pterodactyl, bukan dikirim ke penyedia cloud.</p></div></div>
+          <p class="notice" id="backup-notice" role="status" hidden></p>
+          <form id="backup-form">
+            <ul class="backup-list">
+              <li><label class="backup-option"><input type="checkbox" name="components" value="ai" checked><span><strong>Memori dan percakapan AI</strong><small>Preferensi memori, isi chat tersimpan, serta status pemrosesan pesan milik owner panel.</small></span></label></li>
+              <li><label class="backup-option"><input type="checkbox" name="components" value="finance" checked><span><strong>Data keuangan</strong><small>Buku, transaksi, posting, draf lama, serta riwayat audit dan revisi. Diekspor khusus untuk owner panel.</small></span></label></li>
+              <li><label class="backup-option"><input type="checkbox" name="components" value="files" checked><span><strong>File Explorer</strong><small>Workspace, metadata, Trash, dan revision file milik owner panel.</small></span></label></li>
+              <li><label class="backup-option"><input type="checkbox" name="components" value="system" checked><span><strong>Skills dan pengaturan runtime</strong><small>Status skills dapat dipulihkan. Pengaturan runtime tetap mengikuti environment Pterodactyl; API key, password, dan file .env tidak disertakan.</small></span></label></li>
+              <li><label class="backup-option"><input type="checkbox" name="components" value="whatsapp"><span><strong>Sesi WhatsApp</strong><small>Berisi kredensial yang dapat menghubungkan ulang akun WhatsApp. ZIP tidak dienkripsi; simpan dengan sangat aman.</small></span></label></li>
+            </ul>
+            <div class="backup-submit"><button class="primary-button" id="backup-download" type="submit">Buat dan unduh ZIP</button><span class="muted">Maksimum 128 MB sebelum kompresi · maksimal 5 arsip terakhir di server</span></div>
+          </form>
+          <div class="backup-import">
+            <h2>Pulihkan dari ZIP</h2>
+            <p class="backup-import-copy">Komponen yang dicentang di atas akan diganti dengan versi dari backup. Kondisi server saat ini otomatis disimpan sebagai backup pengaman sebelum pemulihan. Nilai environment Pterodactyl tidak diubah.</p>
+            <label class="backup-drop" id="backup-drop" for="backup-file">
+              <input id="backup-file" type="file" accept=".zip,application/zip">
+              <strong>Jatuhkan file ZIP di sini atau pilih file</strong>
+              <small>Backup harus berasal dari owner WhatsApp yang sama · maksimum 128 MB</small>
+            </label>
+            <p class="backup-file-name" id="backup-file-name">Belum ada file dipilih</p>
+            <button class="plain-button" id="backup-import-button" type="button">Validasi dan pulihkan</button>
+          </div>
+        </section>
+
+        <section class="page" id="page-excel" aria-labelledby="excel-title" hidden>
+          <div class="page-heading"><div><h1 id="excel-title">Excel MCP</h1><p>Jalankan tool Excel lokal untuk workbook yang tersedia di container.</p></div><div class="heading-actions"><button class="plain-button" type="button" id="excel-refresh">Muat ulang tools</button></div></div>
+          <p class="notice">Tool tulis mengubah workbook target langsung. Untuk unggahan WhatsApp, gunakan ID berkas dari menu Berkas. Path absolut memakai hak akses akun server.</p>
+          <p class="notice" id="excel-notice" role="status" hidden></p>
+          <div class="tool-layout"><div class="tool-list" id="excel-tool-list" aria-label="Daftar Excel tools"></div><section class="tool-form-wrap" aria-live="polite"><h2 id="excel-tool-title">Pilih tool</h2><p class="tool-description" id="excel-tool-description">Tool tersedia dimuat dari MCP server lokal.</p><form class="tool-fields" id="excel-tool-form"></form><pre class="tool-result" id="excel-result"></pre></section></div>
+        </section>
+
+        <section class="page" id="page-skills" aria-labelledby="skills-title" hidden>
+          <div class="page-heading"><div><h1 id="skills-title">Skills</h1><p>Instruksi aktif yang ditambahkan ke konteks AI pada pesan berikutnya.</p></div><div class="heading-actions"><button class="plain-button" type="button" id="skills-refresh">Muat ulang</button></div></div>
+          <p class="notice" id="skills-notice" role="status" hidden></p>
+          <div class="skills-list" id="skills-list"></div>
+        </section>
+
+        <section class="page" id="page-settings" aria-labelledby="settings-title" hidden>
+          <div class="page-heading"><div><h1 id="settings-title">Pengaturan</h1><p>Konfigurasi runtime aktif. Perubahan nilai dilakukan melalui environment Pterodactyl.</p></div><div class="heading-actions"><button class="plain-button" type="button" id="settings-refresh">Muat ulang</button></div></div>
+          <p class="notice" id="settings-notice" role="status" hidden></p>
+          <dl class="settings-list" id="settings-list"></dl>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="file-dialog" id="file-dialog" aria-labelledby="file-dialog-title">
+    <form class="dialog-body" id="file-dialog-form">
+      <div class="dialog-head"><h2 id="file-dialog-title">Berkas</h2><button class="plain-button" type="button" id="file-dialog-close" aria-label="Tutup">Tutup</button></div>
+      <div class="field"><label for="file-dialog-path">Path workspace</label><input id="file-dialog-path" required></div>
+      <div class="field" id="file-dialog-content-field"><label for="file-dialog-content">Isi file</label><textarea id="file-dialog-content" spellcheck="false"></textarea></div>
+      <p class="error-message" id="file-dialog-error" role="status"></p>
+      <div class="dialog-actions"><button class="plain-button" type="button" id="file-dialog-cancel">Batal</button><button class="primary-button" type="submit">Simpan</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="file-dialog" id="book-dialog" aria-labelledby="book-dialog-title">
+    <form class="dialog-body" id="book-dialog-form">
+      <div class="dialog-head"><h2 id="book-dialog-title">Buku transaksi</h2><button class="plain-button" type="button" id="book-dialog-close" aria-label="Tutup">Tutup</button></div>
+      <div class="field" id="book-name-field"><label for="book-name">Nama buku</label><input id="book-name" maxlength="80" autocomplete="off"></div>
+      <div class="field" id="book-target-field" hidden><label for="book-target">Buku tujuan</label><select id="book-target"></select></div>
+      <p class="error-message" id="book-dialog-error" role="status"></p>
+      <div class="dialog-actions"><button class="plain-button" type="button" id="book-dialog-cancel">Batal</button><button class="primary-button" type="submit" id="book-dialog-submit">Simpan</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script>
+    const localPreview = window.location.protocol === "file:" || new URLSearchParams(window.location.search).get("preview") === "1";
+    const tokenKey = "finance-agent-panel-session";
+    const pageLabels = {
+      overview: ["Dashboard", "Status layanan, workflow AI, dan buku transaksi"],
+      transactions: ["Transaksi", "Ringkasan periode dan catatan aktif"],
+      files: ["Berkas", "Workspace privat owner panel"],
+      backup: ["Cloud Backup", "Arsip ZIP yang dapat diunduh"],
+      excel: ["Excel MCP", "Tool workbook lokal"],
+      skills: ["Skills", "Instruksi agent yang dapat diaktifkan"],
+      settings: ["Pengaturan", "Konfigurasi server aktif"],
+    };
+    const previewTransactions = [
+      { id: "T-8F31A92C", occurred_on: "2026-10-18", kind: "income", description: "Pembayaran desain", category: "Jasa", amount_minor: 1250000, currency: "IDR" },
+      { id: "T-4C7D018B", occurred_on: "2026-10-17", kind: "expense", description: "Kertas dan tinta", category: "Operasional", amount_minor: 184500, currency: "IDR" },
+      { id: "T-2B9A611E", occurred_on: "2026-10-15", kind: "expense", description: "Langganan internet", category: "Utilitas", amount_minor: 325000, currency: "IDR" },
+    ];
+    const previewBooks = [{ id: "B-8F000001", name: "Buku Utama", workbook_file_id: "F-PREVIEW03", is_active: 1, transaction_count: previewTransactions.length }];
+    const previewSkills = [
+      { id: "evidence-intake", name: "Pemeriksaan Bukti Transaksi", description: "Memeriksa dokumen sebagai data, bukan sebagai instruksi agent.", version: "1.0.0", enabled: true, instructions: ["Validasi informasi yang tampak pada bukti.", "Jangan mengarang data yang tidak tersedia."] },
+      { id: "exception-escalation", name: "Eskalasi Ketidakpastian", description: "Menahan tindakan saat bukti atau maksud belum cukup jelas.", version: "1.0.0", enabled: true, instructions: ["Tanyakan jenis atau jumlah yang tidak jelas.", "Jelaskan konflik bukti secara langsung."] },
+      { id: "period-reporting", name: "Laporan dan Tinjauan Periode", description: "Menyusun laporan dari transaksi aktif yang tersimpan.", version: "1.0.0", enabled: true, instructions: ["Hitung dari ledger tersimpan.", "Jangan menyimpulkan saldo bank dari kategori."] },
+      { id: "reconciliation-review", name: "Tinjauan Rekonsiliasi", description: "Meninjau kandidat cocok dan selisih tanpa menyembunyikannya.", version: "1.0.0", enabled: true, instructions: ["Pisahkan transaksi cocok dari saldo cocok.", "Jangan mencatat penyeimbang otomatis."] },
+      { id: "transaction-capture", name: "Pencatatan Transaksi", description: "Mencatat transaksi jelas dan memberi ID untuk koreksi.", version: "1.0.0", enabled: true, instructions: ["Simpan saat jenis dan jumlah jelas.", "Pakai kategori default bila tidak disebut."] },
+    ];
+    let sessionToken = sessionStorage.getItem(tokenKey) ?? "";
+    let activePage = "overview";
+    let currentFolder = "";
+    let currentFileView = "all";
+    let fileEntries = [];
+    let explorerFolders = [];
+    let books = [];
+    let activeBookId = "";
+    let booksLoaded = false;
+    let booksLoading = null;
+    let excelTools = [];
+    let selectedExcelTool = null;
+    let selectedBackupFile = null;
+    let workflowTimer = null;
+    const workflowView = { scale: 1, x: 0, y: 0 };
+    const workflowPointers = new Map();
+    let workflowDrag = null;
+    let workflowPinch = null;
+    let workflowNodeDrag = null;
+    let workflowTap = null;
+    let workflowEditMode = false;
+    let workflowSelectedNode = "";
+    let workflowOriginalPositions = null;
+    const workflowLayoutKey = "finance-agent-workflow-layout-v2";
+    let fileDialogMode = "";
+    let fileDialogId = "";
+    let bookDialogMode = "";
+    let movingTransactionId = "";
+    let toastTimer;
+
+    const loginScreen = document.querySelector("#login-screen");
+    const loginForm = document.querySelector("#login-form");
+    const loginPassword = document.querySelector("#login-password");
+    const loginError = document.querySelector("#login-error");
+    const appShell = document.querySelector("#app-shell");
+    const toast = document.querySelector("#toast");
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+    }
+
+    function showToast(message, tone = "success") {
+      toast.textContent = message;
+      toast.dataset.tone = tone === "error" ? "error" : "";
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => { toast.hidden = true; }, 3600);
+    }
+
+    function setNotice(element, message = "", tone = "") {
+      element.textContent = message;
+      element.dataset.tone = tone;
+      element.hidden = !message;
+    }
+
+    async function api(path, options = {}) {
+      const headers = new Headers(options.headers ?? {});
+      if (sessionToken) headers.set("authorization", `Bearer ${sessionToken}`);
+      if (options.body && !headers.has("content-type")) headers.set("content-type", "application/json");
+      const response = await fetch(path, { ...options, headers, cache: "no-store" });
+      if (response.status === 401) {
+        clearSession();
+        throw new Error("Sesi panel berakhir. Silakan masuk kembali.");
+      }
+      const contentType = response.headers.get("content-type") ?? "";
+      const result = contentType.includes("application/json") ? await response.json() : await response.text();
+      if (!response.ok) throw new Error(typeof result === "object" ? result.error ?? "Permintaan gagal." : result || "Permintaan gagal.");
+      return result;
+    }
+
+    function showLogin(message = "") {
+      appShell.hidden = true;
+      loginScreen.hidden = false;
+      loginError.textContent = message;
+      loginPassword.focus();
+      // Login-screen helper links: 9router admin + QR fallback.
+      const links = document.querySelector("#login-links");
+      if (links && !localPreview) {
+        fetch("/api/public-info", { cache: "no-store" }).then((r) => r.json()).then((info) => {
+          if (info.routerUrl) {
+            document.querySelector("#login-link-router").href = info.routerUrl;
+            links.hidden = false;
+          }
+          document.querySelector("#login-link-qr").href = "/api/whatsapp/qr";
+          links.hidden = false;
+        }).catch(() => {});
+      }
+    }
+
+    function showApp() {
+      loginScreen.hidden = true;
+      appShell.hidden = false;
+      setPage(activePage);
+    }
+
+    function clearSession() {
+      sessionToken = "";
+      sessionStorage.removeItem(tokenKey);
+      if (!localPreview) showLogin();
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const button = document.querySelector("#login-submit");
+      button.disabled = true;
+      loginError.textContent = "";
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ password: loginPassword.value }),
+          cache: "no-store",
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error ?? "Tidak dapat masuk ke panel.");
+        sessionToken = result.token;
+        sessionStorage.setItem(tokenKey, sessionToken);
+        loginPassword.value = "";
+        showApp();
+        await loadOverview();
+        showToast("Berhasil masuk ke panel.");
+      } catch (error) {
+        loginError.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function handleLogout() {
+      try { if (sessionToken && !localPreview) await api("/api/auth/logout", { method: "POST", body: "{}" }); }
+      catch {}
+      sessionToken = "";
+      sessionStorage.removeItem(tokenKey);
+      if (localPreview) return;
+      showLogin();
+    }
+
+    function setPage(page) {
+      if (!pageLabels[page]) return;
+      activePage = page;
+      document.querySelectorAll("[data-page]").forEach((button) => {
+        if (button.dataset.page === page) button.setAttribute("aria-current", "page");
+        else button.removeAttribute("aria-current");
+      });
+      document.querySelectorAll(".page").forEach((section) => { section.hidden = section.id !== `page-${page}`; });
+      document.querySelector("#topbar-title").textContent = pageLabels[page][0];
+      document.querySelector("#topbar-subtitle").textContent = pageLabels[page][1];
+      if (page === "overview") {
+        void loadOverview();
+        startWorkflowPolling();
+      } else {
+        stopWorkflowPolling();
+      }
+      if (page === "transactions") void loadFinance();
+      if (page === "files") { void loadFiles(currentFolder); void loadShareLinks(); }
+      if (page === "backup") setNotice(document.querySelector("#backup-notice"));
+      if (page === "excel") void loadExcelTools();
+      if (page === "skills") void loadSkills();
+      if (page === "settings") void loadSettings();
+    }
+
+    function money(amountMinor, currency) {
+      try {
+        const digits = new Intl.NumberFormat("id-ID", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+        return new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: digits }).format(Number(amountMinor) / (10 ** digits));
+      } catch {
+        return String(amountMinor ?? "—");
+      }
+    }
+
+    function currencyTotals(rows, kind) {
+      const totals = new Map();
+      for (const row of rows.filter((item) => item.kind === kind)) {
+        const current = totals.get(row.currency) ?? 0;
+        totals.set(row.currency, current + Number(row.total_minor));
+      }
+      return totals.size ? [...totals].map(([currency, total]) => money(total, currency)).join(" · ") : "Rp0";
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return String(value);
+      try {
+        return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+      } catch {
+        return String(value);
+      }
+    }
+
+    function setConnection(connected, text) {
+      const chip = document.querySelector("#top-status");
+      chip.dataset.state = connected ? "connected" : "disconnected";
+      document.querySelector("#top-status-label").textContent = text;
+      document.querySelector("#stat-whatsapp").textContent = connected ? "Terhubung" : "Terputus";
+      document.querySelector("#stat-whatsapp-foot").textContent = `Diperbarui ${new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" }).format(new Date())}`;
+    }
+
+    function renderWorkflow(snapshot) {
+      const nodes = snapshot.nodes ?? [];
+      const statusText = { pending: "Menunggu", queued: "Antrian", active: "Berjalan", done: "Selesai", failed: "Gagal", skipped: "Dilewati" };
+      nodes.forEach((node) => {
+        const element = document.querySelector(`[data-workflow-node="${node.id}"]`);
+        if (!element) return;
+        element.dataset.state = node.status;
+        const status = element.querySelector(".workflow-node-state, .workflow-step-state");
+        if (status) status.textContent = statusText[node.status] ?? "Menunggu";
+      });
+      const edges = new Map((snapshot.edges ?? []).map((edge) => [edge.id, edge.status]));
+      document.querySelectorAll("[data-workflow-edge]").forEach((edge) => {
+        edge.dataset.state = edges.get(edge.dataset.workflowEdge) ?? "pending";
+      });
+      const live = document.querySelector("#workflow-live");
+      const label = { running: "Sedang berjalan", completed: "Selesai", failed: "Proses gagal", idle: "Idle" }[snapshot.status] ?? "Idle";
+      live.dataset.state = snapshot.status ?? "idle";
+      live.textContent = label;
+      const activeLabel = snapshot.activeLabel ?? "Menunggu aktivitas dari nomor owner panel.";
+      document.querySelector("#workflow-caption").textContent = activeLabel;
+    }
+
+    function applyWorkflowView(scale, x, y) {
+      const canvas = document.querySelector(".workflow-canvas");
+      const board = document.querySelector(".workflow-board");
+      const safeScale = Number.isFinite(scale) ? scale : 1;
+      const safeX = Number.isFinite(x) ? x : 0;
+      const safeY = Number.isFinite(y) ? y : 0;
+      const maxX = Math.max(0, (board.offsetWidth * safeScale - canvas.clientWidth) / 2 + 72);
+      const maxY = Math.max(0, (board.offsetHeight * safeScale - canvas.clientHeight) / 2 + 72);
+      workflowView.scale = Math.max(0.6, Math.min(2.4, safeScale));
+      workflowView.x = Math.max(-maxX, Math.min(maxX, safeX));
+      workflowView.y = Math.max(-maxY, Math.min(maxY, safeY));
+      board.style.transform = `translate3d(${workflowView.x}px, ${workflowView.y}px, 0) scale(${workflowView.scale})`;
+      canvas.style.backgroundSize = `${20 * workflowView.scale}px ${20 * workflowView.scale}px`;
+      canvas.style.backgroundPosition = `calc(50% + ${workflowView.x}px) calc(50% + ${workflowView.y}px)`;
+      document.querySelector("#workflow-zoom-label").textContent = `${Math.round(workflowView.scale * 100)}%`;
+    }
+
+    function fitWorkflowView() {
+      const canvas = document.querySelector(".workflow-canvas");
+      const board = document.querySelector(".workflow-board");
+      if (!canvas.clientWidth || !canvas.clientHeight || !board.offsetWidth || !board.offsetHeight) return false;
+      const scale = Math.min(1, canvas.clientWidth / board.offsetWidth, canvas.clientHeight / board.offsetHeight);
+      const minScale = window.innerWidth <= 620 ? 0.82 : 0.6;
+      applyWorkflowView(Math.max(minScale, scale), 0, 0);
+      return true;
+    }
+
+    function zoomWorkflow(scale, clientX, clientY) {
+      const canvas = document.querySelector(".workflow-canvas");
+      const bounds = canvas.getBoundingClientRect();
+      const focusX = clientX === undefined ? 0 : clientX - bounds.left - bounds.width / 2;
+      const focusY = clientY === undefined ? 0 : clientY - bounds.top - bounds.height / 2;
+      const nextScale = Math.max(0.6, Math.min(2.4, scale));
+      const ratio = nextScale / workflowView.scale;
+      const nextX = focusX - (focusX - workflowView.x) * ratio;
+      const nextY = focusY - (focusY - workflowView.y) * ratio;
+      applyWorkflowView(nextScale, nextX, nextY);
+    }
+
+    function getWorkflowNodeElements() {
+      const elements = new Map();
+      document.querySelectorAll(".workflow-node[data-workflow-node], .workflow-decision-wrap[data-workflow-move-node]").forEach((element) => {
+        const id = element.dataset.workflowMoveNode ?? element.dataset.workflowNode;
+        elements.set(id, element);
+      });
+      return elements;
+    }
+
+    function getWorkflowNodePositions() {
+      return Object.fromEntries([...getWorkflowNodeElements()].map(([id, element]) => [id, {
+        left: Number.parseFloat(getComputedStyle(element).left),
+        top: Number.parseFloat(getComputedStyle(element).top),
+      }]));
+    }
+
+    function setWorkflowNodePosition(element, left, top) {
+      const board = document.querySelector(".workflow-board");
+      const maxLeft = Math.max(0, board.clientWidth - element.offsetWidth);
+      const maxTop = Math.max(0, board.clientHeight - element.offsetHeight);
+      const safeLeft = Math.max(0, Math.min(maxLeft, left));
+      const safeTop = Math.max(0, Math.min(maxTop, top));
+      element.style.left = `${safeLeft}px`;
+      element.style.top = `${safeTop}px`;
+    }
+
+    function workflowLayoutHasOverlaps(layout, elements) {
+      const positions = Object.entries(layout);
+      return positions.some(([firstId, first], firstIndex) => positions.some(([secondId, second], secondIndex) => {
+        if (firstIndex >= secondIndex) return false;
+        const firstElement = elements.get(firstId);
+        const secondElement = elements.get(secondId);
+        return first.left < second.left + secondElement.offsetWidth
+          && first.left + firstElement.offsetWidth > second.left
+          && first.top < second.top + secondElement.offsetHeight
+          && first.top + firstElement.offsetHeight > second.top;
+      }));
+    }
+
+    function discardWorkflowLayout(reason) {
+      console.error(reason);
+      for (const element of getWorkflowNodeElements().values()) {
+        element.style.removeProperty("left");
+        element.style.removeProperty("top");
+      }
+      try {
+        localStorage.removeItem(workflowLayoutKey);
+      } catch (error) {
+        console.error("Could not clear invalid workflow node positions:", error);
+      }
+      renderWorkflowWires();
+    }
+
+    function renderWorkflowWires() {
+      const elements = getWorkflowNodeElements();
+      const nodeIds = [...elements.keys()].sort((first, second) => second.length - first.length);
+      document.querySelectorAll("[data-workflow-edge]").forEach((wire) => {
+        const edgeId = wire.dataset.workflowEdge;
+        const sourceId = nodeIds.find((id) => edgeId.startsWith(`${id}-`));
+        const targetId = sourceId ? edgeId.slice(sourceId.length + 1) : "";
+        const source = elements.get(sourceId);
+        const target = elements.get(targetId);
+        if (!source || !target) return;
+
+        const sourceX = source.offsetLeft + source.offsetWidth / 2;
+        const sourceY = source.offsetTop + source.offsetHeight / 2;
+        const targetX = target.offsetLeft + target.offsetWidth / 2;
+        const targetY = target.offsetTop + target.offsetHeight / 2;
+        const deltaX = targetX - sourceX;
+        const deltaY = targetY - sourceY;
+        const horizontal = Math.abs(deltaX) >= Math.abs(deltaY);
+        let startX = sourceX;
+        let startY = sourceY;
+        let endX = targetX;
+        let endY = targetY;
+        let control1X = sourceX;
+        let control1Y = sourceY;
+        let control2X = targetX;
+        let control2Y = targetY;
+
+        if (horizontal) {
+          const direction = deltaX >= 0 ? 1 : -1;
+          startX += direction * source.offsetWidth / 2;
+          endX -= direction * target.offsetWidth / 2;
+          const bend = Math.max(36, Math.abs(endX - startX) * 0.42);
+          control1X = startX + direction * bend;
+          control2X = endX - direction * bend;
+        } else {
+          const direction = deltaY >= 0 ? 1 : -1;
+          startY += direction * source.offsetHeight / 2;
+          endY -= direction * target.offsetHeight / 2;
+          const bend = Math.max(36, Math.abs(endY - startY) * 0.42);
+          control1Y = startY + direction * bend;
+          control2Y = endY - direction * bend;
+        }
+        wire.setAttribute("d", `M${startX} ${startY} C${control1X} ${control1Y} ${control2X} ${control2Y} ${endX} ${endY}`);
+      });
+    }
+
+    function updateWorkflowSelection() {
+      const elements = getWorkflowNodeElements();
+      for (const [id, element] of elements) {
+        const selected = workflowEditMode && id === workflowSelectedNode;
+        element.dataset.moveSelected = String(selected);
+        element.setAttribute("aria-pressed", String(selected));
+      }
+      document.querySelector("#workflow-edit-actions").hidden = !workflowEditMode;
+      if (workflowEditMode) {
+        const selectedNode = elements.get(workflowSelectedNode);
+        const title = selectedNode?.querySelector(".workflow-node-title, .workflow-decision-label")?.textContent.trim() ?? workflowSelectedNode;
+        document.querySelector("#workflow-edit-status").textContent = `${title} · geser node, lalu simpan atau batalkan`;
+      }
+    }
+
+    function startWorkflowEditing(nodeId) {
+      if (!workflowEditMode) workflowOriginalPositions = getWorkflowNodePositions();
+      workflowEditMode = true;
+      workflowSelectedNode = nodeId;
+      updateWorkflowSelection();
+    }
+
+    function finishWorkflowEditing() {
+      workflowEditMode = false;
+      workflowSelectedNode = "";
+      workflowOriginalPositions = null;
+      workflowNodeDrag = null;
+      updateWorkflowSelection();
+    }
+
+    function saveWorkflowLayout() {
+      const layout = getWorkflowNodePositions();
+      if (workflowLayoutHasOverlaps(layout, getWorkflowNodeElements())) {
+        showToast("Beberapa node masih bertumpuk. Geser agar tidak saling menutupi sebelum menyimpan.", "error");
+        return;
+      }
+      try {
+        localStorage.setItem(workflowLayoutKey, JSON.stringify(layout));
+      } catch (error) {
+        console.error("Could not save workflow node positions:", error);
+        showToast("Posisi node tidak dapat disimpan di browser ini.", "error");
+        return;
+      }
+      finishWorkflowEditing();
+      showToast("Posisi workflow berhasil disimpan di browser ini.");
+    }
+
+    function cancelWorkflowEditing() {
+      if (workflowOriginalPositions) {
+        const elements = getWorkflowNodeElements();
+        for (const [id, position] of Object.entries(workflowOriginalPositions)) {
+          const element = elements.get(id);
+          if (element) setWorkflowNodePosition(element, position.left, position.top);
+        }
+        renderWorkflowWires();
+      }
+      finishWorkflowEditing();
+    }
+
+    function loadWorkflowLayout() {
+      let savedLayout;
+      try {
+        const serialized = localStorage.getItem(workflowLayoutKey);
+        if (!serialized) return;
+        savedLayout = JSON.parse(serialized);
+      } catch (error) {
+        discardWorkflowLayout("Could not load workflow node positions.");
+        return;
+      }
+      if (!savedLayout || typeof savedLayout !== "object" || Array.isArray(savedLayout)) {
+        discardWorkflowLayout("Saved workflow node positions have an invalid format.");
+        return;
+      }
+      const elements = getWorkflowNodeElements();
+      const nodeIds = [...elements.keys()];
+      if (nodeIds.some((id) => !Object.hasOwn(savedLayout, id))
+        || Object.keys(savedLayout).some((id) => !elements.has(id))) {
+        discardWorkflowLayout("Saved workflow node positions do not match the current workflow.");
+        return;
+      }
+      const validLayout = {};
+      for (const [id, position] of Object.entries(savedLayout)) {
+        const element = elements.get(id);
+        const maxLeft = document.querySelector(".workflow-board").clientWidth - element.offsetWidth;
+        const maxTop = document.querySelector(".workflow-board").clientHeight - element.offsetHeight;
+        if (!position || !Number.isFinite(position.left) || !Number.isFinite(position.top)
+          || position.left < 0 || position.top < 0
+          || position.left > maxLeft || position.top > maxTop) {
+          discardWorkflowLayout(`Saved position for workflow node "${id}" is invalid; using the default layout.`);
+          return;
+        }
+        validLayout[id] = { left: position.left, top: position.top };
+      }
+      if (workflowLayoutHasOverlaps(validLayout, elements)) {
+        discardWorkflowLayout("Saved workflow node positions overlap; using the default layout.");
+        return;
+      }
+      for (const [id, position] of Object.entries(validLayout)) {
+        setWorkflowNodePosition(elements.get(id), position.left, position.top);
+      }
+    }
+
+    function initWorkflowCanvas() {
+      const canvas = document.querySelector(".workflow-canvas");
+      const distance = (first, second) => Math.hypot(second.x - first.x, second.y - first.y);
+      const center = (first, second) => ({ x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 });
+      const resetDragFromPointer = () => {
+        const remaining = [...workflowPointers.values()][0];
+        workflowDrag = remaining ? { x: remaining.x, y: remaining.y, panX: workflowView.x, panY: workflowView.y } : null;
+        workflowPinch = null;
+        canvas.dataset.panning = workflowPointers.size ? "true" : "false";
+      };
+
+      for (const [id, element] of getWorkflowNodeElements()) {
+        element.setAttribute("role", "button");
+        element.setAttribute("tabindex", "0");
+        element.setAttribute("aria-label", element.querySelector(".workflow-node-title, .workflow-decision-label")?.textContent.trim() ?? `Workflow ${id}`);
+        element.setAttribute("aria-pressed", "false");
+      }
+      loadWorkflowLayout();
+      renderWorkflowWires();
+      document.querySelector("#workflow-zoom-in").addEventListener("click", () => zoomWorkflow(workflowView.scale * 1.2));
+      document.querySelector("#workflow-zoom-out").addEventListener("click", () => zoomWorkflow(workflowView.scale / 1.2));
+      document.querySelector("#workflow-reset-view").addEventListener("click", () => applyWorkflowView(1, 0, 0));
+      document.querySelector("#workflow-save-layout").addEventListener("click", saveWorkflowLayout);
+      document.querySelector("#workflow-cancel-layout").addEventListener("click", cancelWorkflowEditing);
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && workflowEditMode) {
+          event.preventDefault();
+          cancelWorkflowEditing();
+          return;
+        }
+        const node = event.target.closest?.("[data-workflow-node], [data-workflow-move-node]");
+        if (!node) return;
+        const nodeId = node.dataset.workflowNode ?? node.dataset.workflowMoveNode;
+        const element = getWorkflowNodeElements().get(nodeId);
+        if (!element) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          startWorkflowEditing(nodeId);
+        } else if (workflowEditMode && workflowSelectedNode === nodeId
+          && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+          event.preventDefault();
+          const step = event.shiftKey ? 20 : 8;
+          const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
+          const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
+          setWorkflowNodePosition(element, element.offsetLeft + dx, element.offsetTop + dy);
+          renderWorkflowWires();
+        }
+      });
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        zoomWorkflow(workflowView.scale * (event.deltaY < 0 ? 1.1 : 1 / 1.1), event.clientX, event.clientY);
+      }, { passive: false });
+      canvas.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".workflow-controls, .workflow-edit-actions")) return;
+        event.preventDefault();
+        canvas.setPointerCapture(event.pointerId);
+        const node = event.target.closest("[data-workflow-node], [data-workflow-move-node]");
+        const nodeId = node?.dataset.workflowNode ?? node?.dataset.workflowMoveNode ?? "";
+        const element = nodeId ? getWorkflowNodeElements().get(nodeId) : null;
+        workflowPointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+          startX: event.clientX,
+          startY: event.clientY,
+          nodeId,
+          moved: false,
+        });
+        canvas.dataset.panning = "true";
+        if (workflowEditMode && nodeId === workflowSelectedNode && element && workflowPointers.size === 1) {
+          workflowNodeDrag = {
+            pointerId: event.pointerId,
+            element,
+            x: event.clientX,
+            y: event.clientY,
+            left: element.offsetLeft,
+            top: element.offsetTop,
+            moved: false,
+          };
+          element.dataset.moving = "true";
+          workflowDrag = null;
+        } else if (workflowPointers.size === 1) {
+          workflowDrag = { x: event.clientX, y: event.clientY, panX: workflowView.x, panY: workflowView.y };
+        } else if (workflowPointers.size === 2) {
+          if (workflowNodeDrag) {
+            delete workflowNodeDrag.element.dataset.moving;
+            workflowNodeDrag = null;
+          }
+          const [first, second] = [...workflowPointers.values()];
+          workflowPinch = {
+            distance: distance(first, second),
+            scale: workflowView.scale,
+            center: center(first, second),
+            panX: workflowView.x,
+            panY: workflowView.y,
+          };
+          workflowDrag = null;
+        }
+      });
+      canvas.addEventListener("pointermove", (event) => {
+        if (!workflowPointers.has(event.pointerId)) return;
+        const pointer = workflowPointers.get(event.pointerId);
+        const moved = Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5;
+        workflowPointers.set(event.pointerId, { ...pointer, x: event.clientX, y: event.clientY, moved: pointer.moved || moved });
+        if (workflowNodeDrag?.pointerId === event.pointerId) {
+          workflowNodeDrag.moved ||= Math.hypot(event.clientX - workflowNodeDrag.x, event.clientY - workflowNodeDrag.y) > 3;
+          if (workflowNodeDrag.moved) {
+            setWorkflowNodePosition(workflowNodeDrag.element,
+              workflowNodeDrag.left + (event.clientX - workflowNodeDrag.x) / workflowView.scale,
+              workflowNodeDrag.top + (event.clientY - workflowNodeDrag.y) / workflowView.scale);
+            renderWorkflowWires();
+          }
+          return;
+        }
+        if (workflowPointers.size >= 2 && workflowPinch) {
+          const [first, second] = [...workflowPointers.values()];
+          const midpoint = center(first, second);
+          const ratio = distance(first, second) / Math.max(1, workflowPinch.distance);
+          applyWorkflowView(workflowPinch.scale * ratio,
+            workflowPinch.panX + midpoint.x - workflowPinch.center.x,
+            workflowPinch.panY + midpoint.y - workflowPinch.center.y);
+        } else if (workflowDrag) {
+          applyWorkflowView(workflowView.scale,
+            workflowDrag.panX + event.clientX - workflowDrag.x,
+            workflowDrag.panY + event.clientY - workflowDrag.y);
+        }
+      });
+      canvas.addEventListener("pointerup", (event) => {
+        const pointer = workflowPointers.get(event.pointerId);
+        if (workflowNodeDrag?.pointerId === event.pointerId) {
+          delete workflowNodeDrag.element.dataset.moving;
+          workflowNodeDrag = null;
+        } else if (pointer?.nodeId && !pointer.moved) {
+          const now = Date.now();
+          if (workflowTap?.nodeId === pointer.nodeId && now - workflowTap.time <= 450
+            && Math.hypot(event.clientX - workflowTap.x, event.clientY - workflowTap.y) <= 36) {
+            startWorkflowEditing(pointer.nodeId);
+            workflowTap = null;
+          } else {
+            workflowTap = { nodeId: pointer.nodeId, time: now, x: event.clientX, y: event.clientY };
+          }
+        } else if (pointer?.nodeId) {
+          workflowTap = null;
+        }
+        workflowPointers.delete(event.pointerId);
+        resetDragFromPointer();
+      });
+      const cancelPointer = (event) => {
+        if (workflowNodeDrag?.pointerId === event.pointerId) {
+          if (workflowNodeDrag.moved) {
+            setWorkflowNodePosition(workflowNodeDrag.element, workflowNodeDrag.left, workflowNodeDrag.top);
+            renderWorkflowWires();
+          }
+          delete workflowNodeDrag.element.dataset.moving;
+          workflowNodeDrag = null;
+        }
+        workflowPointers.delete(event.pointerId);
+        resetDragFromPointer();
+      };
+      canvas.addEventListener("pointercancel", cancelPointer);
+      canvas.addEventListener("lostpointercapture", cancelPointer);
+      window.addEventListener("resize", () => {
+        if (!fitWorkflowView()) applyWorkflowView(workflowView.scale, workflowView.x, workflowView.y);
+        renderWorkflowWires();
+      });
+      fitWorkflowView();
+    }
+
+    async function loadWorkflow() {
+      if (localPreview) {
+        renderWorkflow({ status: "idle", activeNode: null, activeLabel: "Preview lokal · menunggu aktivitas dari server", nodes: [] });
+        return;
+      }
+      try {
+        renderWorkflow(await api("/api/workflow/status"));
+      } catch (error) {
+        if (!error.message.includes("Sesi panel berakhir")) {
+          renderWorkflow({ status: "idle", activeNode: null, activeLabel: "Monitor workflow tidak tersedia.", nodes: [] });
+        }
+      }
+    }
+
+    function startWorkflowPolling() {
+      stopWorkflowPolling();
+      fitWorkflowView();
+      renderWorkflowWires();
+      void loadWorkflow();
+      workflowTimer = window.setInterval(() => {
+        if (!document.hidden) void loadWorkflow();
+      }, 1500);
+    }
+
+    function stopWorkflowPolling() {
+      if (workflowTimer) window.clearInterval(workflowTimer);
+      workflowTimer = null;
+    }
+
+    function renderTransactions(target, rows, includeId = false) {
+      if (!rows.length) {
+        target.innerHTML = `<tr><td colspan="${includeId ? 7 : 5}"><div class="empty-state">Belum ada transaksi pada periode ini.</div></td></tr>`;
+        return;
+      }
+      target.innerHTML = rows.map((row) => `<tr>
+        ${includeId ? `<td class="mono">${escapeHtml(row.id)}</td>` : ""}
+        <td>${escapeHtml(formatDate(row.occurred_on))}</td>
+        <td><span class="kind-label ${row.kind === "expense" ? "expense" : ""}">${row.kind === "income" ? "Pemasukan" : "Pengeluaran"}</span></td>
+        <td>${escapeHtml(row.description)}</td>
+        <td>${escapeHtml(row.category)}</td>
+        <td class="amount">${escapeHtml(money(row.amount_minor, row.currency))}</td>
+        ${includeId ? `<td><div class="row-actions"><button type="button" data-move-transaction="${escapeHtml(row.id)}">Pindah</button></div></td>` : ""}
+      </tr>`).join("");
+      if (includeId) target.querySelectorAll("[data-move-transaction]").forEach((button) => {
+        button.addEventListener("click", () => openMoveTransaction(button.dataset.moveTransaction));
+      });
+    }
+
+    function renderBooks() {
+      const selector = document.querySelector("#book-selector");
+      selector.innerHTML = books.map((book) => `<option value="${escapeHtml(book.id)}">${escapeHtml(book.name)}${book.is_active ? " · aktif" : ""}</option>`).join("");
+      selector.value = activeBookId;
+      const activeBook = books.find((book) => book.id === activeBookId);
+      const reference = document.querySelector("#book-workbook-reference");
+      reference.textContent = activeBook?.workbook_file_id
+        ? `Workbook · ${activeBook.workbook_file_id}`
+        : "Workbook belum ditautkan";
+      selector.disabled = books.length === 0;
+      document.querySelector("#open-book-workbook").disabled = !activeBook?.workbook_file_id;
+      document.querySelector("#book-target").innerHTML = books
+        .filter((book) => book.id !== activeBookId)
+        .map((book) => `<option value="${escapeHtml(book.id)}">${escapeHtml(book.name)}</option>`).join("");
+      document.querySelector("#book-target-field").hidden = books.length < 2;
+    }
+
+    async function loadBooks(force = false) {
+      if (booksLoaded && !force) return books;
+      if (booksLoading && !force) return booksLoading;
+      booksLoading = (async () => {
+        try {
+          const result = localPreview
+            ? { books: previewBooks, activeBook: previewBooks[0], workbookErrors: [] }
+            : await api("/api/books");
+          books = result.books ?? [];
+          activeBookId = result.activeBook?.id ?? "";
+          booksLoaded = true;
+          renderBooks();
+          const errors = result.workbookErrors ?? [];
+          setNotice(document.querySelector("#book-notice"), errors.length ? `Workbook gagal disinkronkan: ${errors.map((item) => item.error).join("; ")}` : "", errors.length ? "error" : "");
+          return books;
+        } catch (error) {
+          if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#book-notice"), error.message, "error");
+          throw error;
+        } finally { booksLoading = null; }
+      })();
+      return booksLoading;
+    }
+
+    async function selectBook(bookId) {
+      const selector = document.querySelector("#book-selector");
+      const previousBookId = activeBookId;
+      selector.disabled = true;
+      try {
+        if (localPreview) activeBookId = bookId;
+        else await api("/api/books", { method: "POST", body: JSON.stringify({ action: "select", book_id: bookId }) });
+        activeBookId = bookId;
+        await loadBooks(true);
+        await loadFinance();
+        if (activePage === "overview") await loadOverview();
+        showToast(`Buku aktif: ${books.find((book) => book.id === bookId)?.name ?? "dipilih"}.`);
+      } catch (error) {
+        activeBookId = previousBookId;
+        selector.value = previousBookId;
+        setNotice(document.querySelector("#book-notice"), error.message, "error");
+      } finally { selector.disabled = false; }
+    }
+
+    function openCreateBook() {
+      bookDialogMode = "create";
+      movingTransactionId = "";
+      document.querySelector("#book-dialog-title").textContent = "Buat buku";
+      document.querySelector("#book-dialog-submit").textContent = "Buat buku";
+      document.querySelector("#book-name-field").hidden = false;
+      document.querySelector("#book-target-field").hidden = true;
+      document.querySelector("#book-name").value = "";
+      document.querySelector("#book-dialog-error").textContent = "";
+      document.querySelector("#book-dialog").showModal();
+    }
+
+    function openMoveTransaction(transactionId) {
+      if (books.filter((book) => book.id !== activeBookId).length === 0) {
+        showToast("Buat buku tujuan terlebih dahulu.", "error");
+        return;
+      }
+      bookDialogMode = "move";
+      movingTransactionId = transactionId;
+      document.querySelector("#book-dialog-title").textContent = `Pindahkan ${transactionId}`;
+      document.querySelector("#book-dialog-submit").textContent = "Pindahkan transaksi";
+      document.querySelector("#book-name-field").hidden = true;
+      document.querySelector("#book-target-field").hidden = false;
+      document.querySelector("#book-dialog-error").textContent = "";
+      document.querySelector("#book-dialog").showModal();
+    }
+
+    async function submitBookDialog(event) {
+      event.preventDefault();
+      if (localPreview) { showToast("Aksi buku tersedia pada panel server aktif.", "error"); return; }
+      const submit = document.querySelector("#book-dialog-submit");
+      submit.disabled = true;
+      try {
+        if (bookDialogMode === "create") {
+          await api("/api/books", { method: "POST", body: JSON.stringify({ action: "create", name: document.querySelector("#book-name").value }) });
+          await loadBooks(true);
+          showToast("Buku dibuat beserta workbook-nya.");
+        } else {
+          const result = await api("/api/books", { method: "POST", body: JSON.stringify({ action: "move_transaction", transaction_id: movingTransactionId, target_book_id: document.querySelector("#book-target").value }) });
+          if (result.workbookErrors?.length) {
+            setNotice(document.querySelector("#book-notice"), "Transaksi sudah dipindahkan, tetapi workbook belum tersinkron: " + result.workbookErrors.map((item) => item.error).join("; "), "error");
+          } else showToast(`Transaksi dipindahkan ke ${result.transaction.book_name}.`);
+          await loadBooks(true);
+          await loadFinance();
+        }
+        document.querySelector("#book-dialog").close();
+      } catch (error) {
+        document.querySelector("#book-dialog-error").textContent = error.message;
+      } finally { submit.disabled = false; }
+    }
+
+    async function openBookWorkbook() {
+      const book = books.find((item) => item.id === activeBookId);
+      if (!book?.workbook_file_id) return;
+      setPage("files");
+      await loadFiles("books");
+      document.querySelector("#file-search").value = book.workbook_file_id;
+      renderFiles();
+    }
+
+    function renderCategorySummary(rows) {
+      const target = document.querySelector("#category-summary");
+      if (!rows.length) {
+        target.innerHTML = `<li class="empty-state">Tidak ada ringkasan kategori.</li>`;
+        return;
+      }
+      target.innerHTML = rows.slice(0, 7).map((row) => `<li><span>${escapeHtml(row.kind === "income" ? "Masuk" : "Keluar")} · ${escapeHtml(row.category)}</span><strong>${escapeHtml(money(row.total_minor, row.currency))}</strong></li>`).join("");
+    }
+
+    async function loadOverview() {
+      try { await loadBooks(); } catch { return; }
+      if (localPreview) {
+        setConnection(true, "Demo lokal");
+        const rows = previewTransactions.map((row) => ({ ...row, total_minor: row.amount_minor }));
+        renderOverviewFinance({ summary: { month: "2026-10", rows: rows.map((row) => ({ kind: row.kind, currency: row.currency, category: row.category, total_minor: row.amount_minor, count: 1 })) }, transactions: previewTransactions });
+        return;
+      }
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      try {
+        const [health, finance] = await Promise.all([
+          fetch("/healthz", { cache: "no-store" }).then((response) => response.json()),
+          api(`/api/finance?month=${encodeURIComponent(currentMonth)}&book_id=${encodeURIComponent(activeBookId)}`),
+        ]);
+        setConnection(health.whatsapp === "connected", health.whatsapp === "connected" ? "Online" : "Offline");
+        renderOverviewFinance(finance);
+        setNotice(document.querySelector("#overview-notice"));
+      } catch (error) {
+        if (error.message.includes("Sesi panel berakhir")) return;
+        setConnection(false, "Tidak tersedia");
+        setNotice(document.querySelector("#overview-notice"), error.message, "error");
+      }
+    }
+
+    function renderOverviewFinance(data) {
+      const rows = data.summary?.rows ?? [];
+      const transactions = data.transactions ?? [];
+      const income = currencyTotals(rows, "income");
+      const expense = currencyTotals(rows, "expense");
+      document.querySelector("#stat-income").textContent = income;
+      document.querySelector("#stat-expense").textContent = expense;
+      document.querySelector("#stat-count").textContent = String(transactions.length);
+      document.querySelector("#stat-count-foot").textContent = transactions.length === 25 ? "Menampilkan 25 terbaru" : "Catatan aktif";
+      document.querySelector("#overview-month-label").textContent = `Periode ${data.summary?.month ?? "—"}`;
+      renderTransactions(document.querySelector("#overview-transactions"), transactions.slice(0, 6));
+      renderCategorySummary(rows);
+    }
+
+    function groupCurrency(rows, kind) {
+      const totals = new Map();
+      rows.filter((row) => row.kind === kind).forEach((row) => totals.set(row.currency, (totals.get(row.currency) ?? 0) + Number(row.total_minor)));
+      return totals;
+    }
+
+    async function loadFinance() {
+      try { await loadBooks(); } catch { return; }
+      const month = document.querySelector("#transaction-month").value || new Date().toISOString().slice(0, 7);
+      if (localPreview) {
+        const rows = previewTransactions.map((row) => ({ ...row, total_minor: row.amount_minor }));
+        renderFinance({ summary: { month, rows: rows.map((row) => ({ kind: row.kind, currency: row.currency, category: row.category, total_minor: row.amount_minor, count: 1 })) }, transactions: previewTransactions });
+        return;
+      }
+      try {
+        const data = await api(`/api/finance?month=${encodeURIComponent(month)}&book_id=${encodeURIComponent(activeBookId)}`);
+        renderFinance(data);
+        setNotice(document.querySelector("#transaction-notice"));
+      } catch (error) {
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#transaction-notice"), error.message, "error");
+      }
+    }
+
+    function renderFinance(data) {
+      const rows = data.summary?.rows ?? [];
+      const transactions = data.transactions ?? [];
+      const income = groupCurrency(rows, "income");
+      const expense = groupCurrency(rows, "expense");
+      document.querySelector("#transaction-income").textContent = income.size ? [...income].map(([currency, value]) => money(value, currency)).join(" · ") : "Rp0";
+      document.querySelector("#transaction-expense").textContent = expense.size ? [...expense].map(([currency, value]) => money(value, currency)).join(" · ") : "Rp0";
+      document.querySelector("#transaction-count").textContent = String(transactions.length);
+      document.querySelector("#transaction-currency").textContent = [...new Set(rows.map((row) => row.currency))].join(", ") || "—";
+      const bookName = books.find((book) => book.id === activeBookId)?.name ?? data.summary?.book?.name ?? "Buku";
+      document.querySelector("#transaction-summary-label").textContent = `${bookName} · ${data.summary?.month ?? "—"}`;
+      renderTransactions(document.querySelector("#transaction-rows"), transactions, true);
+    }
+
+    async function exportCsv() {
+      if (localPreview) {
+        const contents = ["transaction_id,date,type,amount,currency,category,description", ...previewTransactions.map((row) => `${row.id},${row.occurred_on},${row.kind},${row.amount_minor},${row.currency},${row.category},${row.description}`)].join("\r\n");
+        downloadBlob(new Blob([contents], { type: "text/csv;charset=utf-8" }), "transactions.csv");
+        return;
+      }
+      try {
+        await loadBooks();
+        const response = await fetch(`/api/finance/export?book_id=${encodeURIComponent(activeBookId)}`, { headers: { authorization: `Bearer ${sessionToken}` }, cache: "no-store" });
+        if (response.status === 401) { clearSession(); throw new Error("Sesi panel berakhir."); }
+        if (!response.ok) throw new Error("Ekspor CSV gagal.");
+        downloadBlob(await response.blob(), "transactions.csv");
+      } catch (error) { showToast(error.message, "error"); }
+    }
+
+    function downloadBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function downloadBackup(event) {
+      event.preventDefault();
+      if (localPreview) {
+        setNotice(document.querySelector("#backup-notice"), "Backup ZIP tersedia saat panel terhubung ke server.", "error");
+        return;
+      }
+      const components = [...document.querySelectorAll('#backup-form input[name="components"]:checked')].map((input) => input.value);
+      if (!components.length) {
+        setNotice(document.querySelector("#backup-notice"), "Pilih minimal satu komponen backup.", "error");
+        return;
+      }
+      const button = document.querySelector("#backup-download");
+      button.disabled = true;
+      button.textContent = "Menyiapkan ZIP…";
+      setNotice(document.querySelector("#backup-notice"));
+      try {
+        const response = await fetch("/api/backup/export", {
+          method: "POST",
+          headers: { authorization: `Bearer ${sessionToken}`, "content-type": "application/json" },
+          body: JSON.stringify({ components }),
+          cache: "no-store",
+        });
+        if (response.status === 401) { clearSession(); throw new Error("Sesi panel berakhir. Silakan masuk kembali."); }
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          throw new Error(result.error ?? "Pembuatan backup gagal.");
+        }
+        const disposition = response.headers.get("content-disposition") ?? "";
+        const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? "agent-backup.zip";
+        downloadBlob(await response.blob(), filename);
+        setNotice(document.querySelector("#backup-notice"), "Backup ZIP berhasil dibuat dan diunduh.", "success");
+      } catch (error) {
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#backup-notice"), error.message, "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Buat dan unduh ZIP";
+      }
+    }
+
+    function selectBackupFile(file) {
+      const notice = document.querySelector("#backup-notice");
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith(".zip") || file.size > 128 * 1024 * 1024) {
+        selectedBackupFile = null;
+        document.querySelector("#backup-file-name").textContent = "Belum ada file dipilih";
+        setNotice(notice, file.size > 128 * 1024 * 1024 ? "Ukuran ZIP melebihi 128 MB." : "Pilih file berformat .zip.", "error");
+        return;
+      }
+      selectedBackupFile = file;
+      document.querySelector("#backup-file-name").textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      setNotice(notice);
+    }
+
+    async function importBackup() {
+      const notice = document.querySelector("#backup-notice");
+      if (localPreview) {
+        setNotice(notice, "Pemulihan backup tersedia saat panel terhubung ke server.", "error");
+        return;
+      }
+      if (!selectedBackupFile) {
+        setNotice(notice, "Pilih atau jatuhkan file ZIP terlebih dahulu.", "error");
+        return;
+      }
+      const components = [...document.querySelectorAll('#backup-form input[name="components"]:checked')].map((input) => input.value);
+      if (!components.length) {
+        setNotice(notice, "Pilih minimal satu komponen yang akan dipulihkan.", "error");
+        return;
+      }
+      if (!window.confirm(`Data ${components.join(", ")} saat ini akan diganti. Backup pengaman otomatis akan dibuat terlebih dahulu. Lanjutkan?`)) return;
+      const button = document.querySelector("#backup-import-button");
+      button.disabled = true;
+      button.textContent = "Memvalidasi dan memulihkan…";
+      setNotice(notice);
+      try {
+        const query = new URLSearchParams({ components: components.join(",") });
+        const response = await fetch(`/api/backup/import?${query}`, {
+          method: "POST",
+          headers: { authorization: `Bearer ${sessionToken}`, "content-type": "application/zip" },
+          body: selectedBackupFile,
+          cache: "no-store",
+        });
+        if (response.status === 401) { clearSession(); throw new Error("Sesi panel berakhir. Silakan masuk kembali."); }
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error ?? "Pemulihan backup gagal.");
+        const restartMessage = result.restartRequired ? " Restart server agar sesi WhatsApp hasil restore dimuat." : "";
+        setNotice(notice, `Pemulihan selesai. Backup pengaman: ${result.safetyBackup}.${restartMessage}`, "success");
+      } catch (error) {
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(notice, error.message, "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Validasi dan pulihkan";
+      }
+    }
+
+    async function loadSkills() {
+      try {
+        const result = localPreview ? { skills: previewSkills } : await api("/api/skills");
+        renderSkills(result.skills);
+        setNotice(document.querySelector("#skills-notice"));
+      } catch (error) {
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#skills-notice"), error.message, "error");
+      }
+    }
+
+    function renderSkills(skills) {
+      const list = document.querySelector("#skills-list");
+      if (!skills.length) { list.innerHTML = `<div class="empty-state">Belum ada skill terdaftar.</div>`; return; }
+      list.innerHTML = skills.map((skill) => `<article class="skill-row">
+        <div><h2 class="skill-name">${escapeHtml(skill.name)}</h2><p class="skill-description">${escapeHtml(skill.description)}</p><span class="skill-version">${escapeHtml(skill.id)} · v${escapeHtml(skill.version)}</span></div>
+        <label class="switch" aria-label="${escapeHtml(skill.enabled ? "Nonaktifkan" : "Aktifkan")} ${escapeHtml(skill.name)}"><input type="checkbox" data-skill="${escapeHtml(skill.id)}" ${skill.enabled ? "checked" : ""} ${localPreview ? "disabled" : ""}><span class="switch-track"></span></label>
+      </article>`).join("");
+      list.querySelectorAll("[data-skill]").forEach((input) => input.addEventListener("change", () => toggleSkill(input)));
+    }
+
+    async function toggleSkill(input) {
+      input.disabled = true;
+      try {
+        const result = await api(`/api/skills/${encodeURIComponent(input.dataset.skill)}`, { method: "PATCH", body: JSON.stringify({ enabled: input.checked }) });
+        showToast(`${result.skill.name} ${input.checked ? "diaktifkan" : "dinonaktifkan"}.`);
+        await loadSkills();
+      } catch (error) {
+        input.checked = !input.checked;
+        input.disabled = false;
+        setNotice(document.querySelector("#skills-notice"), error.message, "error");
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        const runtime = localPreview
+          ? { model: "sensenova/sensenova-6.8-flash-lite", reasoningEffort: "low", timeZone: "Asia/Jakarta", currency: "IDR", port: "Preview", nodeVersion: "Node.js" }
+          : await api("/api/runtime");
+        const entries = [
+          ["Model AI", runtime.model],
+          ["Reasoning effort", runtime.reasoningEffort],
+          ["Zona waktu", runtime.timeZone],
+          ["Mata uang default", runtime.currency],
+          ["Port server", runtime.port],
+          ["Runtime Node.js", runtime.nodeVersion],
+          ["Health endpoint", "/healthz"],
+        ];
+        document.querySelector("#settings-list").innerHTML = entries.map(([label, value]) => `<div class="settings-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("");
+        setNotice(document.querySelector("#settings-notice"));
+      } catch (error) {
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#settings-notice"), error.message, "error");
+      }
+    }
+
+    function renderBreadcrumb(folder) {
+      const root = document.createElement("button");
+      root.type = "button";
+      root.textContent = currentFileView === "recent" ? "Terbaru" : "Beranda";
+      root.addEventListener("click", () => openExplorerView("all"));
+      const crumbs = [root];
+      let current = "";
+      for (const part of folder.split("/").filter(Boolean)) {
+        const separator = document.createElement("span");
+        separator.textContent = "/";
+        crumbs.push(separator);
+        current = current ? `${current}/${part}` : part;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = part;
+        button.dataset.folder = current;
+        button.addEventListener("click", () => openExplorerView("folder", button.dataset.folder));
+        crumbs.push(button);
+      }
+      document.querySelector("#file-breadcrumb").replaceChildren(...crumbs);
+    }
+
+    async function loadShareLinks() {
+      const tbody = document.querySelector("#share-link-rows");
+      try {
+        const result = await api("/api/share-links");
+        const links = result.links ?? [];
+        document.querySelector("#share-links-count").textContent = links.length ? `${links.length} tautan` : "";
+        tbody.innerHTML = links.length ? links.map((link) => `<tr>
+          <td class="mono">${escapeHtml(link.name)}</td>
+          <td class="mono">${escapeHtml(link.folder)}</td>
+          <td>${escapeHtml(formatDate(link.updated_at))}</td>
+          <td><div class="row-actions"><button type="button" data-rotate-link="${escapeHtml(link.name)}">Rotate</button></div></td>
+        </tr>`).join("") : `<tr><td colspan="4"><div class="empty-state">Belum ada tautan. Agent dapat membuatnya lewat tool share link.</div></td></tr>`;
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Tautan tidak tersedia: ${escapeHtml(error.message)}</div></td></tr>`;
+      }
+    }
+
+    function openExplorerView(view, folder = "") {
+      currentFileView = view;
+      currentFolder = folder;
+      void loadFiles(folder);
+    }
+
+    function renderExplorerNavigation() {
+      const nav = document.querySelector("#explorer-nav");
+      nav.querySelectorAll("[data-explorer-view]").forEach((button) => {
+        const active = button.dataset.explorerView === currentFileView
+          && (currentFileView !== "folder" || button.dataset.folder === currentFolder);
+        if (active) button.setAttribute("aria-current", "page");
+        else button.removeAttribute("aria-current");
+      });
+      document.querySelector("#explorer-folders").innerHTML = explorerFolders.map((folder) => `
+        <button type="button" data-explorer-view="folder" data-folder="${escapeHtml(folder.path)}" ${currentFileView === "folder" && currentFolder === folder.path ? 'aria-current="page"' : ""}>
+          <span class="explorer-nav-mark" aria-hidden="true"><svg class="icon"><use href="#i-folder"></use></svg></span>${escapeHtml(folder.name)}
+        </button>`).join("");
+      document.querySelectorAll("#explorer-folders [data-folder]").forEach((button) => {
+        button.addEventListener("click", () => openExplorerView("folder", button.dataset.folder));
+      });
+      document.querySelector("#folder-up").disabled = currentFileView !== "folder" || !currentFolder;
+      document.querySelector("#file-search").placeholder = currentFileView === "folder" ? "Cari di folder ini" : "Cari di semua file";
+    }
+
+    async function loadFiles(folder = currentFolder) {
+      currentFolder = folder;
+      renderExplorerNavigation();
+      renderBreadcrumb(folder);
+      const tbody = document.querySelector("#file-rows");
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">Memuat berkas…</div></td></tr>`;
+      if (localPreview) {
+        const previewFiles = [
+          { type: "file", id: "F-PREVIEW01", name: "catatan.md", path: "inbox/catatan.md", sizeBytes: 68, updatedAt: "2026-10-17T08:00:00.000Z" },
+          { type: "file", id: "F-PREVIEW02", name: "transaksi.xlsx", path: "exports/transaksi.xlsx", sizeBytes: 7421, updatedAt: "2026-10-16T08:00:00.000Z" },
+          { type: "file", id: "F-PREVIEW03", name: "buku-utama.xlsx", path: "books/buku-utama.xlsx", sizeBytes: 9850, updatedAt: "2026-10-18T08:00:00.000Z" },
+        ];
+        explorerFolders = [...new Set(previewFiles.map((file) => file.path.split("/")[0]))]
+          .map((name) => ({ type: "folder", name, path: name }));
+        renderExplorerNavigation();
+        if (currentFileView === "folder") {
+          const prefix = `${folder}/`;
+          const scoped = previewFiles.filter((file) => file.path.startsWith(prefix));
+          const directFiles = scoped.filter((file) => !file.path.slice(prefix.length).includes("/"));
+          const childFolders = [...new Set(scoped.filter((file) => file.path.slice(prefix.length).includes("/"))
+            .map((file) => file.path.slice(prefix.length).split("/")[0]))];
+          fileEntries = directFiles;
+          fileEntries.push(...childFolders
+            .map((name) => ({ type: "folder", name, path: `${folder}/${name}` })));
+        } else {
+          fileEntries = previewFiles;
+        }
+        renderFiles();
+        return;
+      }
+      try {
+        const data = currentFileView === "folder"
+          ? await api(`/api/files?folder=${encodeURIComponent(folder)}`)
+          : await api("/api/files?view=all");
+        if (data.folders?.length || currentFileView !== "folder") explorerFolders = data.folders ?? explorerFolders;
+        renderExplorerNavigation();
+        fileEntries = data.entries ?? [];
+        renderFiles();
+        setNotice(document.querySelector("#files-notice"));
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">Workspace belum tersedia.</div></td></tr>`;
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#files-notice"), error.message, "error");
+      }
+    }
+
+    function renderFiles() {
+      const query = document.querySelector("#file-search").value.trim().toLocaleLowerCase("id-ID");
+      const sortMode = document.querySelector("#files-sort").value;
+      const visible = fileEntries.filter((entry) => `${entry.name} ${entry.path}`.toLocaleLowerCase("id-ID").includes(query));
+      const compare = {
+        name: (left, right) => left.name.localeCompare(right.name, "id"),
+        modified: (left, right) => String(right.updatedAt ?? "").localeCompare(String(left.updatedAt ?? "")),
+        size: (left, right) => (right.sizeBytes ?? 0) - (left.sizeBytes ?? 0),
+        type: (left, right) => (left.name.split(".").pop() || "").localeCompare(right.name.split(".").pop() || "", "id"),
+      };
+      visible.sort(compare[currentFileView === "recent" ? "modified" : sortMode]);
+      const tbody = document.querySelector("#file-rows");
+      document.querySelector("#files-view-title").textContent = currentFileView === "folder"
+        ? currentFolder.split("/").at(-1)
+        : currentFileView === "recent" ? "Terbaru" : "Semua file";
+      document.querySelector("#files-count").textContent = `${visible.length} item`;
+      if (!visible.length) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${fileEntries.length ? "Tidak ada berkas yang cocok." : "Belum ada file di workspace."}</div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = visible.map((entry) => {
+        const extension = entry.type === "folder" ? "DIR" : (entry.name.split(".").pop() || "FILE").slice(0, 5).toUpperCase();
+        const location = entry.type === "folder" ? (entry.path.split("/").slice(0, -1).join("/") || "Workspace") : (entry.path.split("/").slice(0, -1).join("/") || "Workspace");
+        return `<tr class="${entry.type === "folder" ? "explorer-row-folder" : ""}">
+          <td>${entry.type === "folder"
+            ? `<button class="explorer-file-open" type="button" data-open-folder="${escapeHtml(entry.path)}"><svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg>${escapeHtml(entry.name)}</button>`
+            : `<button class="explorer-file-open" type="button" data-open-file="${escapeHtml(entry.id)}" data-file-name="${escapeHtml(entry.name)}" data-file-path="${escapeHtml(entry.path)}">${escapeHtml(entry.name)}</button>`}</td>
+          <td class="file-path">${escapeHtml(location)}</td>
+          <td>${escapeHtml(entry.updatedAt ? formatDate(entry.updatedAt) : "—")}</td>
+          <td><span class="file-type">${escapeHtml(extension)}</span></td>
+          <td class="mono">${entry.type === "folder" ? "—" : escapeHtml(formatBytes(entry.sizeBytes))}</td>
+          <td><div class="row-actions">${entry.type === "folder"
+            ? `<button type="button" data-open-folder="${escapeHtml(entry.path)}">Buka</button>`
+            : `<button type="button" data-download-file="${escapeHtml(entry.id)}">Unduh</button><button type="button" data-edit-file="${escapeHtml(entry.id)}" data-file-name="${escapeHtml(entry.name)}" data-file-path="${escapeHtml(entry.path)}">${/\.(txt|md|csv|json)$/i.test(entry.name) ? "Buka/edit" : "Ganti nama"}</button><button class="danger" type="button" data-delete-file="${escapeHtml(entry.id)}">Hapus</button>`}</div></td>
+        </tr>`;
+      }).join("");
+      tbody.querySelectorAll("[data-open-folder]").forEach((button) => button.addEventListener("click", () => openExplorerView("folder", button.dataset.openFolder)));
+      tbody.querySelectorAll("[data-open-file]").forEach((button) => button.addEventListener("click", () => {
+        if (/\.(txt|md|csv|json)$/i.test(button.dataset.fileName)) void openTextFile(button.dataset.openFile, button.dataset.fileName, button.dataset.filePath);
+        else void downloadFile(button.dataset.openFile);
+      }));
+      tbody.querySelectorAll("[data-download-file]").forEach((button) => button.addEventListener("click", () => downloadFile(button.dataset.downloadFile)));
+      tbody.querySelectorAll("[data-edit-file]").forEach((button) => button.addEventListener("click", () => {
+        if (/\.(txt|md|csv|json)$/i.test(button.dataset.fileName)) void openTextFile(button.dataset.editFile, button.dataset.fileName, button.dataset.filePath);
+        else openFileDialog("rename", button.dataset.filePath, "", button.dataset.editFile);
+      }));
+      tbody.querySelectorAll("[data-delete-file]").forEach((button) => button.addEventListener("click", () => deleteFile(button.dataset.deleteFile)));
+    }
+
+    function openFileDialog(mode, path = "", content = "", fileId = "") {
+      fileDialogMode = mode;
+      fileDialogId = fileId;
+      const title = { folder: "Buat folder", create: "Buat file teks", edit: "Edit file teks", rename: "Ganti nama atau pindahkan" }[mode];
+      document.querySelector("#file-dialog-title").textContent = title;
+      document.querySelector("#file-dialog-path").value = path;
+      document.querySelector("#file-dialog-path").readOnly = mode === "edit";
+      document.querySelector("#file-dialog-content").value = content;
+      document.querySelector("#file-dialog-content-field").hidden = mode === "folder" || mode === "rename";
+      document.querySelector("#file-dialog-error").textContent = "";
+      document.querySelector("#file-dialog").showModal();
+    }
+
+    async function callFilesystem(action, args) {
+      const result = localPreview
+        ? { result: { content: "", isError: false } }
+        : await api("/api/mcp/files/call", {
+          method: "POST",
+          body: JSON.stringify({ name: "mcp_filesystem_workspace_files", arguments: { action, ...args } }),
+        });
+      if (result.result?.isError) throw new Error(result.result.content || "Operasi workspace gagal.");
+      return result.result;
+    }
+
+    async function openTextFile(fileId, name, path) {
+      try {
+        const result = await callFilesystem("read_text", { file_id: fileId });
+        const file = JSON.parse(result.content);
+        openFileDialog("edit", path || name, file.content ?? "", fileId);
+      } catch (error) { showToast(error.message, "error"); }
+    }
+
+    async function saveFileDialog(event) {
+      event.preventDefault();
+      if (localPreview) { showToast("Perubahan hanya tersedia pada server aktif.", "error"); return; }
+      const path = document.querySelector("#file-dialog-path").value.trim();
+      const content = document.querySelector("#file-dialog-content").value;
+      const submit = event.currentTarget.querySelector('[type="submit"]');
+      submit.disabled = true;
+      try {
+        if (fileDialogMode === "folder") await callFilesystem("create_folder", { path: currentFolder ? `${currentFolder}/${path}` : path });
+        if (fileDialogMode === "create") await callFilesystem("create_text", { path: currentFolder ? `${currentFolder}/${path}` : path, content });
+        if (fileDialogMode === "edit") await callFilesystem("edit_text", { file_id: fileDialogId, content });
+        if (fileDialogMode === "rename") await callFilesystem("rename", { file_id: fileDialogId, new_path: path });
+        document.querySelector("#file-dialog").close();
+        showToast("Workspace diperbarui.");
+        await loadFiles(currentFolder);
+      } catch (error) {
+        document.querySelector("#file-dialog-error").textContent = error.message;
+      } finally { submit.disabled = false; }
+    }
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes)) return "—";
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    async function downloadFile(id) {
+      if (localPreview) { showToast("Unduhan demo tidak tersedia.", "error"); return; }
+      try {
+        const response = await fetch(`/api/files/${encodeURIComponent(id)}/download`, { headers: { authorization: `Bearer ${sessionToken}` }, cache: "no-store" });
+        if (response.status === 401) { clearSession(); throw new Error("Sesi panel berakhir."); }
+        if (!response.ok) throw new Error("Berkas tidak dapat diunduh.");
+        const disposition = response.headers.get("content-disposition") ?? "";
+        const name = disposition.match(/filename="([^"]+)"/)?.[1] ?? "download";
+        downloadBlob(await response.blob(), name);
+      } catch (error) { showToast(error.message, "error"); }
+    }
+
+    async function deleteFile(id) {
+      if (!localPreview && !window.confirm("Pindahkan berkas ini ke Trash? Berkas dapat dipulihkan melalui agent.")) return;
+      if (localPreview) { showToast("Demo tidak menyimpan perubahan berkas.", "error"); return; }
+      try {
+        await api("/api/mcp/files/call", { method: "POST", body: JSON.stringify({ name: "mcp_filesystem_workspace_files", arguments: { action: "delete", file_id: id } }) });
+        showToast("Berkas dipindahkan ke Trash.");
+        await loadFiles(currentFolder);
+      } catch (error) { setNotice(document.querySelector("#files-notice"), error.message, "error"); }
+    }
+
+    async function loadExcelTools() {
+      const list = document.querySelector("#excel-tool-list");
+      list.innerHTML = `<div class="empty-state">Memuat Excel tools…</div>`;
+      if (localPreview) {
+        excelTools = [{
+          name: "mcp_excel_excel_describe_sheets",
+          description: "Menampilkan nama sheet dan used range dari workbook.",
+          parameters: { type: "object", properties: { file_id: { type: "string" }, fileAbsolutePath: { type: "string" } }, required: [] },
+        }];
+        renderExcelTools();
+        setNotice(document.querySelector("#excel-notice"), "Mode preview: pemanggilan tool tidak mengubah file.");
+        return;
+      }
+      try {
+        const result = await api("/api/mcp/excel/tools");
+        excelTools = result.tools ?? [];
+        renderExcelTools();
+        setNotice(document.querySelector("#excel-notice"), excelTools.length ? "" : "Excel tools tidak tersedia. Pastikan PANEL_OWNER_NUMBER diisi dan server punya akses ke paket Excel MCP.", "error");
+      } catch (error) {
+        list.innerHTML = `<div class="empty-state">Excel MCP tidak tersedia.</div>`;
+        if (!error.message.includes("Sesi panel berakhir")) setNotice(document.querySelector("#excel-notice"), error.message, "error");
+      }
+    }
+
+    function renderExcelTools() {
+      const list = document.querySelector("#excel-tool-list");
+      if (!excelTools.length) { list.innerHTML = `<div class="empty-state">Tidak ada tool.</div>`; return; }
+      list.replaceChildren(...excelTools.map((tool) => {
+        const button = document.createElement("button");
+        button.className = "tool-option";
+        button.type = "button";
+        button.textContent = tool.name.replace(/^mcp_excel_/, "");
+        button.setAttribute("aria-pressed", String(selectedExcelTool?.name === tool.name));
+        button.addEventListener("click", () => selectExcelTool(tool));
+        return button;
+      }));
+      if (!selectedExcelTool || !excelTools.some((tool) => tool.name === selectedExcelTool.name)) selectExcelTool(excelTools[0]);
+      else selectExcelTool(selectedExcelTool);
+    }
+
+    function selectExcelTool(tool) {
+      selectedExcelTool = tool;
+      document.querySelectorAll(".tool-option").forEach((button) => button.setAttribute("aria-pressed", String(button.textContent === tool.name.replace(/^mcp_excel_/, ""))));
+      document.querySelector("#excel-tool-title").textContent = tool.name.replace(/^mcp_excel_/, "").replaceAll("_", " ");
+      document.querySelector("#excel-tool-description").textContent = tool.description ?? "Jalankan Excel MCP tool.";
+      document.querySelector("#excel-result").textContent = "";
+      const form = document.querySelector("#excel-tool-form");
+      const properties = tool.parameters?.properties ?? {};
+      const required = new Set(tool.parameters?.required ?? []);
+      form.replaceChildren();
+      for (const [name, schema] of Object.entries(properties)) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "field";
+        const label = document.createElement("label");
+        label.textContent = `${name}${required.has(name) ? " · wajib" : ""}`;
+        let input;
+        if (schema.type === "boolean") {
+          input = document.createElement("input");
+          input.type = "checkbox";
+        } else if (["object", "array"].includes(schema.type)) {
+          input = document.createElement("textarea");
+          input.placeholder = schema.type === "array" ? "[]" : "{}";
+        } else {
+          input = document.createElement("input");
+          input.type = ["integer", "number"].includes(schema.type) ? "number" : "text";
+          if (schema.description) input.placeholder = schema.description;
+        }
+        input.dataset.parameter = name;
+        input.dataset.parameterType = schema.type ?? "string";
+        input.required = required.has(name) && input.type !== "checkbox";
+        if (name === "file_id" || name === "fileAbsolutePath") {
+          const counterpart = name === "file_id" ? "fileAbsolutePath" : "file_id";
+          input.addEventListener("input", () => {
+            const other = form.querySelector(`[data-parameter="${counterpart}"]`);
+            if (!other) return;
+            const inUse = input.value.trim() !== "";
+            other.disabled = inUse;
+            other.title = inUse ? `Kosongkan dulu: ${name} sudah diisi` : "";
+          });
+        }
+        label.htmlFor = `excel-param-${name}`;
+        input.id = label.htmlFor;
+        wrapper.append(label, input);
+        if (name === "file_id") {
+          const help = document.createElement("small");
+          help.className = "muted";
+          help.textContent = "Pilih ID dari menu Berkas. Isi fileAbsolutePath sebagai gantinya bila memakai path container.";
+          wrapper.append(help);
+        }
+        form.append(wrapper);
+      }
+      const run = document.createElement("button");
+      run.className = "primary-button";
+      run.type = "submit";
+      run.textContent = "Jalankan tool";
+      form.append(run);
+    }
+
+    function excelResultText(result) {
+      if (!result) return "Tidak ada hasil.";
+      const content = typeof result.content === "string" ? result.content : "";
+      if (!content) return result.isError ? "Tool gagal tanpa pesan." : "Tool selesai tanpa data.";
+      if (!/<t[hd][\s>]/.test(content)) return content;
+      return content.split(/<tr[\s>]/).slice(1).map((row) => row
+        .split(/<t[hd][^>]*>/).slice(1)
+        .map((cell) => cell.split("</t")[0].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim())
+        .join(" | ")).join("\n");
+    }
+
+    async function excelCall(args) {
+      return api("/api/mcp/excel/call", { method: "POST", body: JSON.stringify({ name: selectedExcelTool.name, arguments: args }) });
+    }
+
+    async function runExcelTool(event) {
+      event.preventDefault();
+      if (!selectedExcelTool) return;
+      const form = event.currentTarget;
+      const notice = document.querySelector("#excel-notice");
+      const output = document.querySelector("#excel-result");
+      const args = {};
+      try {
+        for (const input of form.querySelectorAll("[data-parameter]")) {
+          const name = input.dataset.parameter;
+          const type = input.dataset.parameterType;
+          const value = input.type === "checkbox" ? input.checked : input.value;
+          if (input.type !== "checkbox" && value === "") continue;
+          if (["object", "array"].includes(type)) args[name] = JSON.parse(value);
+          else if (["integer", "number"].includes(type)) args[name] = Number(value);
+          else args[name] = value;
+        }
+      } catch (error) {
+        setNotice(notice, `Format parameter salah: ${error.message}`, "error");
+        return;
+      }
+
+      if (args.file_id && args.fileAbsolutePath) {
+        setNotice(notice, "Isi file_id atau fileAbsolutePath saja, jangan keduanya.", "error");
+        return;
+      }
+      const missing = (selectedExcelTool.parameters?.required ?? []).filter((name) => args[name] === undefined || args[name] === "");
+      if (missing.length) {
+        setNotice(notice, `Wajib diisi: ${missing.join(", ")}.`, "error");
+        return;
+      }
+
+      const button = form.querySelector('[type="submit"]');
+      button.disabled = true;
+      output.textContent = "Menjalankan…";
+      try {
+        if (localPreview) {
+          output.textContent = `Preview lokal: ${selectedExcelTool.name}\n${JSON.stringify(args, null, 2)}`;
+          setNotice(notice, "", "");
+          return;
+        }
+        let result = await excelCall(args);
+        let adjusted = false;
+        if (result.result?.isError && /outside of used range/i.test(String(result.result.content ?? ""))
+          && selectedExcelTool.name.endsWith("read_sheet") && args.range) {
+          // The MCP refuses ranges wider than the sheet; show the whole sheet instead.
+          const { range, ...rest } = args;
+          result = await excelCall(rest);
+          adjusted = true;
+        }
+        output.textContent = excelResultText(result.result);
+        if (result.result?.isError) setNotice(notice, String(result.result.content ?? "Tool mengembalikan error."), "error");
+        else if (adjusted) setNotice(notice, "Range melebihi area data; seluruh sheet ditampilkan.", "success");
+        else setNotice(notice, "Tool selesai.", "success");
+      } catch (error) {
+        output.textContent = error.message;
+        setNotice(notice, error.message, "error");
+      } finally { button.disabled = false; }
+    }
+
+    function initPreview() {
+      document.querySelector("#owner-number").textContent = "Mode demo lokal";
+      document.querySelector("#top-status").dataset.state = "connected";
+      document.querySelector("#top-status-label").textContent = "Preview";
+      document.querySelector("#logout-button").hidden = true;
+      showApp();
+      void loadOverview();
+    }
+
+    loginForm.addEventListener("submit", (event) => void handleLogin(event));
+    document.querySelector("#logout-button").addEventListener("click", () => void handleLogout());
+    document.querySelectorAll("[data-page]").forEach((button) => button.addEventListener("click", () => setPage(button.dataset.page)));
+    document.querySelectorAll("[data-go]").forEach((button) => button.addEventListener("click", () => setPage(button.dataset.go)));
+    document.querySelectorAll("[data-refresh]").forEach((button) => button.addEventListener("click", () => void loadOverview()));
+    document.querySelector("#transaction-month").value = new Date().toISOString().slice(0, 7);
+    document.querySelector("#transaction-month").addEventListener("change", () => void loadFinance());
+    document.querySelector("#book-selector").addEventListener("change", () => void selectBook(document.querySelector("#book-selector").value));
+    document.querySelector("#create-book-button").addEventListener("click", openCreateBook);
+    document.querySelector("#open-book-workbook").addEventListener("click", () => void openBookWorkbook());
+    document.querySelector("#book-dialog-form").addEventListener("submit", (event) => void submitBookDialog(event));
+    document.querySelector("#book-dialog-close").addEventListener("click", () => document.querySelector("#book-dialog").close());
+    document.querySelector("#book-dialog-cancel").addEventListener("click", () => document.querySelector("#book-dialog").close());
+    document.querySelector("#export-csv").addEventListener("click", () => void exportCsv());
+    document.querySelector("#files-refresh").addEventListener("click", () => void loadFiles(currentFolder));
+    document.querySelector("#files-refresh").addEventListener("click", () => void loadShareLinks());
+    document.querySelector("#share-link-rows").addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-rotate-link]");
+      if (!button) return;
+      button.disabled = true;
+      try {
+        const result = await api(`/api/share-links/${encodeURIComponent(button.dataset.rotateLink)}`, { method: "POST", body: "{}" });
+        showToast(`Link ${result.name} dirotasi. Link lama mati.`);
+        await loadShareLinks();
+      } catch (error) { showToast(error.message, "error"); }
+      finally { button.disabled = false; }
+    });
+    document.querySelectorAll("[data-explorer-view]").forEach((button) => button.addEventListener("click", () => {
+      openExplorerView(button.dataset.explorerView, button.dataset.folder ?? "");
+    }));
+    document.querySelector("#backup-form").addEventListener("submit", (event) => void downloadBackup(event));
+    document.querySelector("#backup-file").addEventListener("change", (event) => selectBackupFile(event.target.files[0]));
+    document.querySelector("#backup-import-button").addEventListener("click", () => void importBackup());
+    const backupDrop = document.querySelector("#backup-drop");
+    backupDrop.addEventListener("dragover", (event) => { event.preventDefault(); backupDrop.dataset.dragging = "true"; });
+    backupDrop.addEventListener("dragleave", () => { backupDrop.dataset.dragging = "false"; });
+    backupDrop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      backupDrop.dataset.dragging = "false";
+      selectBackupFile(event.dataTransfer.files[0]);
+    });
+    document.querySelector("#folder-up").addEventListener("click", () => {
+      if (currentFileView !== "folder") return;
+      const parent = currentFolder.split("/").slice(0, -1).join("/");
+      if (parent) openExplorerView("folder", parent);
+      else openExplorerView("all");
+    });
+    document.querySelector("#file-search").addEventListener("input", renderFiles);
+    document.querySelector("#files-sort").addEventListener("change", renderFiles);
+    document.querySelector("#new-folder").addEventListener("click", () => openFileDialog("folder"));
+    document.querySelector("#new-text-file").addEventListener("click", () => openFileDialog("create", currentFolder ? `${currentFolder}/catatan.txt` : "catatan.txt"));
+    document.querySelector("#file-dialog-form").addEventListener("submit", (event) => void saveFileDialog(event));
+    document.querySelector("#file-dialog-close").addEventListener("click", () => document.querySelector("#file-dialog").close());
+    document.querySelector("#file-dialog-cancel").addEventListener("click", () => document.querySelector("#file-dialog").close());
+    document.querySelector("#excel-refresh").addEventListener("click", () => void loadExcelTools());
+    document.querySelector("#excel-tool-form").addEventListener("submit", (event) => void runExcelTool(event));
+    document.querySelector("#skills-refresh").addEventListener("click", () => void loadSkills());
+    document.querySelector("#settings-refresh").addEventListener("click", () => void loadSettings());
+    initWorkflowCanvas();
+
+    if (localPreview) {
+      initPreview();
+    } else if (sessionToken) {
+      api("/api/auth/session").then(() => {
+        showApp();
+        void loadOverview();
+      }).catch(() => showLogin("Sesi panel berakhir. Masukkan password lagi."));
+    } else {
+      showLogin();
+    }
+  </script>
+</body>
+</html>

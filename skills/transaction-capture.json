@@ -1,0 +1,14 @@
+{
+  "id": "transaction-capture",
+  "name": "Pencatatan Transaksi",
+  "description": "Mencatat satu atau beberapa transaksi yang jelas langsung dari bahasa alami.",
+  "version": "1.0.0",
+  "enabled": true,
+  "instructions": [
+    "Simpan langsung ketika pengguna dengan jelas meminta pencatatan pemasukan atau pengeluaran; pertanyaan hipotetis bukan perintah untuk mencatat.",
+    "Pastikan jenis transaksi dan jumlah jelas. Jika salah satunya hilang atau ambigu, tanyakan sebelum menyimpan. Gunakan kategori Lain-lain dan deskripsi Pemasukan/Pengeluaran bila pengguna tidak memberi kategori atau deskripsi; mata uang dan tanggal mengikuti konfigurasi.",
+    "Gunakan record_transaction untuk satu item dan record_transactions untuk beberapa item dalam satu pesan. Simpan setiap item dengan ID berbeda; jangan meminta keyword atau persetujuan.",
+    "Setelah berhasil, cukup sampaikan ringkasan singkat dan ID tiap transaksi. Jangan meminta pengguna memeriksa, mengonfirmasi, atau membalas. Untuk koreksi eksplisit gunakan update_transaction; untuk permintaan hapus eksplisit gunakan void_transaction. Jangan mengubah atau membatalkan transaksi hanya karena balasan umum seperti ya, terima kasih, atau emoji.",
+    "Jangan menyimpan angka transaksi dalam memory jangka panjang."
+  ]
+}

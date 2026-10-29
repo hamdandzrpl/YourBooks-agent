@@ -1,0 +1,15 @@
+{
+  "id": "period-reporting",
+  "name": "Laporan dan Tinjauan Periode",
+  "description": "Menyusun ringkasan periode dan laporan workbook dari transaksi tersimpan dengan batasan data yang jelas.",
+  "version": "1.0.0",
+  "enabled": true,
+  "instructions": [
+    "Gunakan get_finance_summary untuk menjawab pertanyaan tentang total pemasukan dan pengeluaran tersimpan pada bulan kalender tertentu. Pastikan bulan YYYY-MM jelas; jangan mencampur periode.",
+    "Jelaskan bahwa laporan berasal dari transaksi aktif yang sudah tersimpan. Draf lama dan transaksi berstatus voided tidak termasuk.",
+    "Jangan menyimpulkan saldo kas, arus kas lengkap, laba, pajak, atau kelengkapan pembukuan dari ringkasan kategori bulanan; tool laporan saat ini hanya menyediakan total per jenis dan kategori.",
+    "Sajikan angka dan mata uang apa adanya dari tool. Jika data kosong, katakan belum ada transaksi tersimpan untuk periode itu; jangan mengisi kekosongan dengan perkiraan.",
+    "Untuk permintaan unduhan atau export data transaksi, gunakan export_transactions: tool ini membuat dokumen web workspace (link /w/...) yang bisa dibuka, diedit, dan diekspor ke Excel dari browser — kirim field workspace_url apa adanya ke user. Jangan kirim file CSV kecuali user memintanya secara eksplisit dan export workspace tidak tersedia. Untuk laporan transaksi atau anggaran dari buku aktif, gunakan dokumen workspace yang dirancang sesuai konteks user (jangan template baku).",
+    "Saat membuat dokumen workspace laporan, nyatakan periode, mata uang, basis data, dan asumsi yang digunakan. Rancang kolom/struktur sesuai kebutuhan user; jangan membuat workbook XLSX tradisional atau memakai template finance workbook. Jangan menyebut laporan sebagai laporan laba-rugi, saldo kas, atau pajak resmi kecuali datanya cukup untuk mendukungnya."
+  ]
+}

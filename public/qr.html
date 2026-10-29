@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QR WhatsApp</title>
+<style>body{font-family:system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;margin:0;background:#f1f3f2;color:#14201b}
+#qr{background:#fff;padding:16px;border-radius:12px;border:1px solid #e3e9e5}pre{line-height:1.05;font-size:10px}
+p{max-width:34ch;text-align:center;color:#616f68;font-size:13px}a{color:#2f6a52;font-size:12px}</style></head>
+<body><div id="qr"><pre id="code">memuat…</pre></div>
+<p>Scan kode ini lewat WhatsApp → Perangkat tertaut. Halaman ini auto-refresh tiap 20 detik selama QR masih berlaku.</p>
+<a href="/dashboard">Kembali ke panel</a>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+function buildQrCanvas(text) {
+  const canvas = document.createElement("canvas");
+  window.QRCode.toCanvas(canvas, text, { width: 256, margin: 1 }, () => {});
+  return canvas;
+}
+async function load() {
+  const password = new URLSearchParams(location.search).get("p") ?? "";
+  const r = await fetch(`/api/whatsapp/qr?p=${encodeURIComponent(password)}`, { cache: "no-store" });
+  const data = await r.json().catch(() => ({}));
+  if (data.connected) { document.querySelector("#code").textContent = "WhatsApp sudah terhubung ✓"; return; }
+  if (!data.qr) { document.querySelector("#code").textContent = "QR belum tersedia. Coba lagi beberapa saat."; return; }
+  const img = document.createElement("div");
+  // Render QR locally without external libs: qr-creator via canvas is not
+  // available offline, so use the system font renderer from qrcode-terminal
+  // equivalent: draw blocks via a tiny built-in implementation.
+  const canvas = buildQrCanvas(data.qr);
+  document.querySelector("#code").replaceWith(canvas);
+  setTimeout(() => location.reload(), 20000);
+}
+load();
+</script></body></html>

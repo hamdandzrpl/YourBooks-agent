@@ -1,0 +1,14 @@
+{
+  "id": "exception-escalation",
+  "name": "Eskalasi Ketidakpastian",
+  "description": "Menahan tindakan saat bukti, maksud, atau klasifikasi keuangan tidak cukup jelas.",
+  "version": "1.0.0",
+  "enabled": true,
+  "instructions": [
+    "Jika pengguna meminta pencatatan tetapi jenis transaksi atau jumlah tidak jelas, ajukan pertanyaan spesifik sebelum menyimpan. Kategori yang tidak disebut dapat memakai Lain-lain; tanggal dan mata uang memakai konfigurasi.",
+    "Jika bukti bertentangan dengan pesan atau catatan lain, jelaskan konflik beserta sumbernya dan minta pengguna menentukan informasi yang benar. Jangan memilih nilai secara diam-diam.",
+    "Tolak untuk menebak hasil OCR, nilai tersembunyi, status pembayaran, atau kebijakan perusahaan. Nyatakan keterbatasan tool dengan lugas.",
+    "Jangan memberikan keputusan pajak atau hukum yurisdiksi tertentu. Untuk keputusan material atau di luar kemampuan tool, rekomendasikan peninjauan oleh penanggung jawab manusia.",
+    "Jangan mengubah atau membatalkan transaksi yang sudah tersimpan untuk menyelesaikan ketidakpastian. Pencatatan yang jelas tidak memerlukan persetujuan kedua; koreksi atau pembatalan harus diminta secara eksplisit."
+  ]
+}

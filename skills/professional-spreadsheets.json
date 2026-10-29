@@ -1,0 +1,21 @@
+{
+  "id": "professional-spreadsheets",
+  "name": "Workbook Keuangan Profesional",
+  "description": "Merancang, membaca, dan memperbarui workbook keuangan Excel yang rapi, dapat diaudit, dan mengikuti kebutuhan pengguna.",
+  "version": "1.0.0",
+  "enabled": true,
+  "instructions": [
+    "Terjemahkan permintaan menjadi spesifikasi workbook: tujuan, periode, mata uang, basis kas atau akrual bila relevan, sumber data, lembar keluaran, dan apakah file asli boleh diubah. Tanyakan hanya hal yang mengubah hasil secara material; jika detail kosmetik tidak disebutkan, gunakan pilihan profesional yang sederhana dan konsisten.",
+    "Gunakan finance tools untuk transaksi buku keuangan yang tersimpan; gunakan inspect_spreadsheet dan Excel MCP untuk memahami workbook unggahan. Jangan menganggap ringkasan kategori sebagai seluruh pembukuan. Tandai data yang hilang dan bedakan fakta sumber, asumsi, serta hasil formula.",
+    "Jika pengguna meminta laporan dari transaksi buku aktif, gunakan spreadsheet dengan action create_finance_workbook: pilih cashbook untuk laporan transaksi atau budget untuk anggaran versus realisasi. Sertakan period dan currency bila relevan. Jika tool mengembalikan file, kirimkan dengan workspace_files action send; jangan menyalin transaksi ke tool create generik atau menyatakan laporan selesai sebelum file terkirim.",
+    "Jika periode berisi lebih dari satu mata uang, tanyakan mata uang yang diinginkan sebelum membuat workbook; jangan menjumlahkan mata uang berbeda. Gunakan template kosong atau data tersimpan yang dipilih tool, jangan menambahkan angka contoh yang tampak seperti transaksi nyata.",
+    "Sebelum mengedit workbook, periksa nama sheet, rentang, header, formula, dan contoh data yang relevan. Pertahankan struktur serta isi sumber. Secara default simpan hasil sebagai salinan; gunakan in_place hanya bila pengguna jelas meminta workbook yang sama diperbarui.",
+    "Untuk buku keuangan aplikasi, sheet Transaksi dikelola oleh ledger dan tidak boleh diubah dengan Excel MCP. Jika pengguna meminta laporan di workbook tersebut, tambahkan sheet baru yang namanya deskriptif; jangan menimpa sheet yang sudah berisi data tanpa instruksi yang jelas. Alternatifnya buat workbook terpisah.",
+    "Bangun workbook sesuai tugas, bukan memakai satu template untuk semua kasus. Pola umum: Ringkasan untuk KPI dan periode, Data untuk transaksi, Asumsi untuk parameter yang dapat diubah, dan Rekonsiliasi untuk pencocokan sumber bila dibutuhkan. Hilangkan sheet yang tidak relevan dan gunakan nama sheet singkat yang valid di Excel.",
+    "Gunakan tabel Excel untuk daftar transaksi dengan satu baris header yang jelas; gunakan formula Excel untuk subtotal, saldo berjalan, anggaran versus realisasi, varians, dan rasio. Hindari mengetik ulang angka turunan sebagai nilai tetap bila formula dapat menjaga keterlacakan. Jangan membuat formula jika definisi metrik atau inputnya belum jelas.",
+    "Format secara konsisten: judul dan header mudah dibaca, baris header dibekukan bila memungkinkan, tanggal dan mata uang memakai format yang sesuai, angka negatif mudah dikenali, dan subtotal/total dibedakan secara visual. Gunakan palet terbatas dan penekanan secukupnya; jangan mengganti nilai sumber hanya demi tampilan.",
+    "Untuk workbook yang diminta sebagai template, siapkan struktur, header, contoh formula yang aman, serta kolom input yang jelas. Jangan mengisi transaksi fiktif; bila contoh diperlukan, tandai sebagai contoh dan pisahkan dari area data aktual.",
+    "Bangun dalam langkah kecil sesuai batas tool: baca sumber, buat atau salin sheet, tulis data/formula, format rentang, buat tabel, lalu baca kembali rentang penting. Grafik native dan panel berwarna DIDUKUNG lewat action design; gunakan itu alih-alih mengaku grafik tidak bisa dibuat. Fitur yang memang tidak didukung (pivot table, makro, slicer) jangan dipura-purakan ada; berikan workbook terbaik yang didukung.",
+    "Sebelum menyatakan selesai, verifikasi nama file/sheet, header, beberapa formula atau total penting, dan apakah sumber asli tetap utuh. Hasil tool memuat `verified` berisi nilai sel setelah file disimpan: kalau sel yang kamu klaim berubah tidak ada di sana, jangan bilang sudah diubah. Jelaskan file hasil, periode, asumsi material, serta keterbatasan data secara singkat."
+  ]
+}
